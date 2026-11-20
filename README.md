@@ -15,3 +15,21 @@ npm run dev
 ```
 ## Build
 `npm run build` gera `dist/` (publique em Netlify, Vercel, Cloudflare Pages etc. com as duas variáveis VITE_*).
+
+## Etapa 2 (árvore)
+- Execute também `supabase/migrations/002_tree.sql`.
+- Para ver bolas antes da Etapa 3 (sem fotos reais, aparece a inicial do nome):
+  `insert into public.participants (user_id, photo_path) select id, 'teste/'||id||'.jpg' from public.profiles where display_name is not null on conflict do nothing;`
+  Para remover: `delete from public.participants where photo_path like 'teste/%';`
+
+## Etapa 3 (participação)
+- Execute `supabase/migrations/003_participation.sql` (cria o bucket `participant-photos`, políticas de Storage e ativa o Realtime em `participants`).
+- Se testou com o `insert` da Etapa 2, apague essas linhas de teste antes (`delete ... where photo_path like 'teste/%'`), senão essas pessoas não poderão participar de verdade.
+- Para conferir o Realtime: abra o app em dois navegadores com contas diferentes e confirme a participação em um deles.
+
+## Etapa 4 (sorteio)
+1. Execute `supabase/migrations/004_draw.sql`.
+2. Publique a função: `supabase functions deploy run-draw` (CLI logada e vinculada ao projeto com `supabase link`). Ela usa as variáveis padrão da Supabase (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`); nenhuma chave vai para o frontend.
+3. Defina o administrador (`supabase/admin_setup.sql`) antes de sortear. Só ele vê REALIZAR SORTEIO, e a função confere isso de novo no servidor.
+4. Teste com contas de verdade: confirme 3+ participações, sorteie como admin, abra a caixa em cada conta.
+Observações: o sorteio é único (índice parcial em `draws`); não há tela de reinicialização. Para refazer em testes, no SQL Editor: `delete from public.draws;` (apaga os pares em cascata).
