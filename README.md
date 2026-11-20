@@ -1,35 +1,30 @@
-# Natal Secreto — Etapa 1
+# Natal Secreto
 
-## Supabase
+App web de Amigo Secreto de Natal: uma árvore coletiva onde cada participante pendura uma bola com a própria foto. Vite 8, HTML/CSS/JS (ES Modules), Supabase (Auth, Database, Storage, Realtime, Edge Functions) e Font Awesome. Sem frameworks e sem TypeScript.
+
+## 1. Supabase
 1. Crie um projeto em supabase.com.
-2. SQL Editor: execute `supabase/migrations/001_schema.sql`.
-3. Authentication > URL Configuration: *Site URL* = URL do app (ex.: `http://localhost:5173`) e adicione a mesma em *Redirect URLs* (vale também para a URL de produção).
-4. Authentication > Providers > Google: ative e informe Client ID/Secret do Google Cloud (Authorized redirect URI: `https://SEU-PROJETO.supabase.co/auth/v1/callback`).
-5. Crie sua conta no app, depois execute `supabase/admin_setup.sql` com seu e-mail.
+2. **SQL Editor**: execute `supabase/setup_completo.sql` (reúne as migrações 001 a 005: tabelas, RLS, bucket de fotos, sorteio, endurecimento). Em instalação já existente, rode só as migrações que faltam, em ordem.
+3. **Authentication > URL Configuration**: *Site URL* = URL do app (ex.: `http://localhost:5173`); em *Redirect URLs* inclua também a URL de produção.
+4. **Authentication > Providers > Google**: ative e informe Client ID e Secret do Google Cloud (URI de redirecionamento autorizada: `https://SEU-PROJETO.supabase.co/auth/v1/callback`).
+5. **Edge Function**: `supabase login`, `supabase link --project-ref SEU-PROJETO`, `supabase functions deploy run-draw`. Ela usa as variáveis que a própria Supabase injeta; nada de chave secreta no frontend.
+6. Crie sua conta no app, confirme o e-mail, defina o nome e rode `supabase/admin_setup.sql` com o seu e-mail. Essa conta passa a ser o **REI** (administrador).
 
-## Local
+## 2. Rodar localmente
 ```
-cp .env.example .env   # preencha URL e chave anon
+cp .env.example .env     # preencha VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY (chave anon/publishable)
 npm install
-npm run dev
+npm run dev              # http://localhost:5173
 ```
-## Build
-`npm run build` gera `dist/` (publique em Netlify, Vercel, Cloudflare Pages etc. com as duas variáveis VITE_*).
 
-## Etapa 2 (árvore)
-- Execute também `supabase/migrations/002_tree.sql`.
-- Para ver bolas antes da Etapa 3 (sem fotos reais, aparece a inicial do nome):
-  `insert into public.participants (user_id, photo_path) select id, 'teste/'||id||'.jpg' from public.profiles where display_name is not null on conflict do nothing;`
-  Para remover: `delete from public.participants where photo_path like 'teste/%';`
+## 3. Build e publicação
+`npm run build` gera `dist/`. Publique em Netlify, Cloudflare Pages ou Vercel definindo as duas variáveis `VITE_*` no painel. `public/_headers` (Netlify/Cloudflare) aplica CSP e cabeçalhos de segurança; na Vercel, replique-os em `vercel.json`. Depois de publicar, adicione a URL final nas *Redirect URLs* do Supabase.
 
-## Etapa 3 (participação)
-- Execute `supabase/migrations/003_participation.sql` (cria o bucket `participant-photos`, políticas de Storage e ativa o Realtime em `participants`).
-- Se testou com o `insert` da Etapa 2, apague essas linhas de teste antes (`delete ... where photo_path like 'teste/%'`), senão essas pessoas não poderão participar de verdade.
-- Para conferir o Realtime: abra o app em dois navegadores com contas diferentes e confirme a participação em um deles.
+## 4. Roteiro de teste (com contas reais)
+1. Cadastro, confirmação de e-mail, recuperação de senha e login com Google.
+2. Confirme participação com foto em 3+ contas; abra em dois navegadores e veja a bola aparecer sem recarregar.
+3. Como admin: SORTEIO > REALIZAR SORTEIO. Em cada conta a caixa de presente aparece; abra e confira "VOCÊ TIROU!".
+4. Para repetir o teste: `delete from public.draws;` no SQL Editor (apaga os pares em cascata). Não existe reinicialização pela interface, de propósito.
 
-## Etapa 4 (sorteio)
-1. Execute `supabase/migrations/004_draw.sql`.
-2. Publique a função: `supabase functions deploy run-draw` (CLI logada e vinculada ao projeto com `supabase link`). Ela usa as variáveis padrão da Supabase (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`); nenhuma chave vai para o frontend.
-3. Defina o administrador (`supabase/admin_setup.sql`) antes de sortear. Só ele vê REALIZAR SORTEIO, e a função confere isso de novo no servidor.
-4. Teste com contas de verdade: confirme 3+ participações, sorteie como admin, abra a caixa em cada conta.
-Observações: o sorteio é único (índice parcial em `draws`); não há tela de reinicialização. Para refazer em testes, no SQL Editor: `delete from public.draws;` (apaga os pares em cascata).
+## Estrutura
+`src/config` cliente Supabase · `src/services` auth, perfil, participantes, sorteio · `src/pages` telas · `src/components` cena, ornamentos, neve, modais · `src/utils` layout e imagem · `src/styles` CSS · `supabase/migrations` SQL · `supabase/functions/run-draw` sorteio. Revisão de segurança em `SEGURANCA.md`.

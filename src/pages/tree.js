@@ -16,6 +16,8 @@ export function mountTree(root, { user, name, admin }) {
       <button class="icon-btn" id="out" type="button" aria-label="Sair" title="Sair"><i class="fa-solid fa-right-from-bracket"></i></button></header>
     <p class="hint" hidden>A árvore ainda está vazia. As bolas aparecem aqui quando alguém confirmar participação.</p>
     <p class="banner" hidden><span>Não foi possível carregar a árvore.</span> <button type="button" id="retry">Tentar de novo</button></p>
+    <div class="loading" id="loading"><i class="fa-solid fa-snowflake"></i> Carregando a árvore…</div>
+    <p class="banner net" role="status" hidden>Sem conexão. Reconectando…</p>
     <button class="fab" id="join" type="button"></button>
     <div class="fab-left"><button class="fab" id="doDraw" type="button" hidden><i class="fa-solid fa-dice"></i> REALIZAR SORTEIO</button>
       <button class="fab alt" id="drawBtn" type="button"><i class="fa-solid fa-gift"></i> SORTEIO</button></div>
@@ -34,6 +36,7 @@ export function mountTree(root, { user, name, admin }) {
     const ids = new Set(list.map((p) => p.user_id)), fresh = first ? new Set() : new Set([...ids].filter((i) => !seen.has(i)));
     seen = ids;
     scene.innerHTML = buildScene(L) + `<div class="orns">${L.items.map((it) => ornamentHTML(it, L.S, it.p.user_id === adminId, fresh.has(it.p.user_id))).join('')}</div>`;
+    scene.classList.toggle('many', list.length > 60); // muitas bolas: desliga o balanço para poupar celulares
     $('.hint').hidden = list.length > 0;
     updateJoin();
     scrollTo(0, first ? 1e9 : el.scrollHeight - fromBottom); // começa embaixo, no tronco
@@ -54,7 +57,7 @@ export function mountTree(root, { user, name, admin }) {
   const refresh = async () => { // realtime / pós-confirmação: só redesenha se algo mudou
     try { const next = await fetchParticipants(); if (sig(next) !== sig(list)) { list = next; draw(false); } } catch { /* mantém a árvore atual */ }
   };
-  const showMine = () => scene.querySelector(`[data-uid="${user.id}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const showMine = () => scene.querySelector(`[data-uid="${user.id}"]`)?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
   join.onclick = () => openParticipate({ userId: user.id, name, onDone: async () => { await refresh(); showMine(); } });
   const openOrn = (o) => { const p = list.find((x) => x.user_id === o.dataset.uid); if (!p) return; const a = p.user_id === adminId;
     openCard({ name: a ? 'REI' : p.profiles?.display_name || 'Participante', path: p.photo_path, admin: a }); };
@@ -77,10 +80,17 @@ export function mountTree(root, { user, name, admin }) {
   };
   doDraw.onclick = () => openConfirmDraw({ count: list.length, run: async () => { await runDraw(); await refreshDraw(); } });
 
+  const onOffline = () => { if (scene.isConnected) $('.net').hidden = false; };
+  const onOnline = () => {
+    if (!scene.isConnected) { removeEventListener('offline', onOffline); removeEventListener('online', onOnline); return; }
+    $('.net').hidden = true; refresh(); refreshDraw();
+  };
+  addEventListener('offline', onOffline); addEventListener('online', onOnline); if (!navigator.onLine) onOffline();
+
   const load = async () => {
     try { [list, adminId] = await Promise.all([fetchParticipants(), fetchAdminId()]); $('.banner').hidden = true; }
     catch { $('.banner').hidden = false; }
-    draw(true);
+    draw(true); $('#loading').hidden = true;
   };
   $('#retry').onclick = load;
   load().then(() => {

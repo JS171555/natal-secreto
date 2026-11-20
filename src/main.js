@@ -6,13 +6,14 @@ import { getProfile, isAdmin } from './services/profile.js';
 import { renderLogin, renderRegister, renderForgot, renderReset } from './pages/auth.js';
 import { renderProfileSetup } from './pages/profile-setup.js';
 import { renderNotice } from './pages/home.js';
+import { flags } from './services/auth.js';
 import { mountTree } from './pages/tree.js';
 
 const app = document.getElementById('app');
 let currentUser = null, recovery = false;
 
-const showAuth = (view = 'login') =>
-  ({ login: renderLogin, register: renderRegister, forgot: renderForgot }[view] || renderLogin)(app, showAuth);
+const showAuth = (view = 'login', notice) =>
+  ({ login: renderLogin, register: renderRegister, forgot: renderForgot }[view] || renderLogin)(app, showAuth, notice);
 
 async function enter(user) {
   renderNotice(app, 'Natal Secreto', 'Carregando…');
@@ -35,7 +36,13 @@ if (!configured) {
         recovery = true;
         return renderReset(app, () => { recovery = false; currentUser = null; supabase.auth.getSession().then(({ data }) => data.session && (currentUser = data.session.user.id, enter(data.session.user))); });
       }
-      if (event === 'SIGNED_OUT' || (event === 'INITIAL_SESSION' && !session)) { currentUser = null; recovery = false; return showAuth('login'); }
+      if (event === 'SIGNED_OUT' || (event === 'INITIAL_SESSION' && !session)) {
+        const expired = event === 'SIGNED_OUT' && currentUser && !flags.manualOut;
+        const oauthFail = /error_description|error=/.test(location.hash) || /error_description/.test(location.search);
+        flags.manualOut = false; currentUser = null; recovery = false;
+        if (oauthFail) history.replaceState(null, '', location.pathname);
+        return showAuth('login', expired ? 'Sua sessão expirou. Entre novamente para continuar.' : oauthFail ? 'Não foi possível concluir o login com o Google. Tente novamente.' : undefined);
+      }
       if (recovery || !session) return;
       if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session.user.id !== currentUser) {
         currentUser = session.user.id; enter(session.user);

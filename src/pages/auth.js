@@ -27,7 +27,7 @@ function links(root, go) {
   root.querySelectorAll('[data-go]').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); go(a.dataset.go); }));
 }
 
-export function renderLogin(root, go) {
+export function renderLogin(root, go, notice) {
   root.innerHTML = shell('Bem-vindo! Entre para pendurar sua bola na árvore.', `
     <form id="f" novalidate>
       ${field('email', 'E-mail', 'email', 'autocomplete="email"')}
@@ -38,6 +38,7 @@ export function renderLogin(root, go) {
     <button class="btn ghost" id="google" type="button"><i class="fa-brands fa-google"></i> Entrar com Google</button>
     <nav class="links"><a href="#" data-go="register">Criar conta</a><a href="#" data-go="forgot">Esqueci a senha</a></nav>`);
   wire(root, '#f', ({ email, password }) => auth.signIn(email.trim(), password));
+  if (notice) { const m = root.querySelector('.msg'); m.textContent = notice; m.className = 'msg err'; m.hidden = false; }
   root.querySelector('#google').onclick = () => auth.signInWithGoogle().catch((e) => {
     const m = root.querySelector('.msg'); m.textContent = auth.friendlyError(e); m.className = 'msg err'; m.hidden = false;
   });

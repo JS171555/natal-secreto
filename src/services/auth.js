@@ -9,10 +9,13 @@ export const signInWithGoogle = () =>
   wrap(supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin } }));
 export const sendRecovery = (email) => wrap(supabase.auth.resetPasswordForEmail(email, { redirectTo: location.origin }));
 export const updatePassword = (password) => wrap(supabase.auth.updateUser({ password }));
-export const signOut = () => wrap(supabase.auth.signOut());
+export const flags = { manualOut: false }; // distingue "Sair" de sessão expirada
+export const signOut = () => { flags.manualOut = true; return wrap(supabase.auth.signOut()); };
 
 export function friendlyError(e) {
   const m = String(e?.message || e || '').toLowerCase();
+  if (m.includes('jwt expired') || m.includes('session')) return 'Sua sessão expirou. Entre novamente.';
+  if (e?.code === '23514' || m.includes('reserved_name') || m.includes('check constraint')) return 'Esse nome não pode ser usado. Escolha outro.';
   if (m.includes('invalid login')) return 'E-mail ou senha incorretos.';
   if (m.includes('not confirmed')) return 'Confirme seu e-mail antes de entrar. Veja sua caixa de entrada.';
   if (m.includes('already registered')) return 'Este e-mail já tem cadastro. Tente entrar ou recuperar a senha.';

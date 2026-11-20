@@ -105,3 +105,27 @@ body:has(dialog[open]) { overflow: hidden; }
 @keyframes zoom { from { opacity: 0; transform: scale(.3) rotate(-8deg); filter: blur(6px); } }
 
 .sheet:focus { outline: none; }
+
+/* Etapa 5: acabamento */
+@keyframes twinkle { 50% { transform: scale(1.08); } }
+.scene.many .orn { animation: none; }
+.ball::before { animation: shimmer 5s ease-in-out var(--d, 0s) infinite; }
+@keyframes shimmer { 50% { opacity: .55; transform: rotate(-28deg) translate(4%, 6%); } }
+.loading { position: fixed; inset: 0; z-index: 7; display: grid; place-content: center; justify-items: center; gap: 12px; background: rgba(3,26,20,.9); color: var(--ice); font-weight: 700; }
+.loading i { font-size: 2rem; color: var(--gold); animation: spin 3s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.banner.net { top: calc(max(12px, env(safe-area-inset-top)) + 116px); }
+.orn .ball { transition: transform .25s; }
+.fab, .icon-btn, .btn { -webkit-tap-highlight-color: transparent; }
+@media (hover: hover) {
+  .fab:not(.done):hover { transform: translateY(-2px); filter: brightness(1.08); }
+  .icon-btn:hover { border-color: var(--gold); } .orn:hover .ball { transform: scale(1.07); }
+  .btn.gold:hover { filter: brightness(1.06); }
+}
+@media (max-width: 380px) { .fab { padding: 10px 14px; font-size: .82rem; } .fab.done { max-width: 150px; } .fab-left .fab { max-width: 170px; } }
+.scroll-hint { left: 50%; bottom: calc(max(16px, env(safe-area-inset-bottom)) + 128px); }
+.scroll-hint { bottom: auto; top: calc(max(12px, env(safe-area-inset-top)) + 64px); animation: none; }
+.hint:not([hidden]) ~ .scroll-hint { display: none; }
+#doDraw { white-space: nowrap; max-width: none; }
+.scroll-hint { padding: 4px 12px; border-radius: 999px; background: rgba(5,11,32,.6); animation: hintfade 1s 5s forwards; }
+@keyframes hintfade { to { opacity: 0; visibility: hidden; } }
