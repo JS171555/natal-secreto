@@ -15,3 +15,9 @@ npm run dev
 ```
 ## Build
 `npm run build` gera `dist/` (publique em Netlify, Vercel, Cloudflare Pages etc. com as duas variáveis VITE_*).
+
+## Etapa 2 (árvore)
+- Execute também `supabase/migrations/002_tree.sql`.
+- Para ver bolas antes da Etapa 3 (sem fotos reais, aparece a inicial do nome):
+  `insert into public.participants (user_id, photo_path) select id, 'teste/'||id||'.jpg' from public.profiles where display_name is not null on conflict do nothing;`
+  Para remover: `delete from public.participants where photo_path like 'teste/%';`

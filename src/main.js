@@ -1,10 +1,12 @@
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import './styles/main.css';
+import './styles/tree.css';
 import { supabase, configured } from './config/supabase.js';
 import { getProfile, isAdmin } from './services/profile.js';
 import { renderLogin, renderRegister, renderForgot, renderReset } from './pages/auth.js';
 import { renderProfileSetup } from './pages/profile-setup.js';
-import { renderHome, renderNotice } from './pages/home.js';
+import { renderNotice } from './pages/home.js';
+import { mountTree } from './pages/tree.js';
 
 const app = document.getElementById('app');
 let currentUser = null, recovery = false;
@@ -17,7 +19,7 @@ async function enter(user) {
   try {
     const profile = await getProfile(user.id);
     if (!profile?.display_name) return renderProfileSetup(app, user, () => enter(user));
-    renderHome(app, { name: profile.display_name, admin: await isAdmin() });
+    mountTree(app, { user, name: profile.display_name, admin: await isAdmin() });
   } catch {
     renderNotice(app, 'Não foi possível carregar', 'Verifique sua conexão e se o banco do Supabase foi configurado.', 'Tentar de novo', () => enter(user));
   }
