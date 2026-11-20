@@ -1,0 +1,66 @@
+body:has(.tree-page) .bg { display: none; }
+body:has(.tree-page) { background: #031A14; }
+.scene { position: relative; width: 100%; overflow: hidden; background: linear-gradient(180deg, #01040f 0%, var(--night) 22%, #081a3a 60%, #0b2a35 82%, var(--deep) 100%); }
+.scene svg { position: absolute; inset: 0; display: block; }
+.orns { position: absolute; inset: 0; }
+.snow { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4; }
+.star-g { transform-box: fill-box; transform-origin: center; animation: twinkle 3.6s ease-in-out infinite; filter: drop-shadow(0 0 18px #FFE79A); }
+@keyframes twinkle { 50% { transform: scale(1.08); filter: drop-shadow(0 0 30px #FFE79A); } }
+
+.orn { position: absolute; width: var(--s); display: flex; flex-direction: column; align-items: center; transform-origin: 50% 0; animation: sway 6s ease-in-out var(--d) infinite alternate; }
+@keyframes sway { from { transform: rotate(-1.6deg); } to { transform: rotate(1.6deg); } }
+.cord { width: 1px; height: var(--cord); background: linear-gradient(rgba(245,247,255,.15), rgba(245,247,255,.7)); }
+.cap { position: relative; width: calc(var(--s) * .26); height: calc(var(--s) * .18); margin-bottom: -1px; border-radius: 45% 45% 12% 12% / 70% 70% 12% 12%;
+  background: linear-gradient(90deg, #b8902f, var(--gold-glow) 45%, var(--gold) 70%, #9a7623); box-shadow: 0 1px 3px rgba(0,0,0,.5); }
+.cap::before { content: ''; position: absolute; left: 50%; top: -6px; width: 8px; height: 8px; border: 1.5px solid var(--gold); border-radius: 50%; transform: translateX(-50%); }
+.ball { position: relative; width: var(--s); aspect-ratio: 1; border-radius: 50%; overflow: hidden; display: grid; place-items: center;
+  background: radial-gradient(circle at 35% 30%, #2d4f82, #0a1840);
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.6), inset 0 0 14px 4px rgba(190,220,255,.35), 0 6px 18px rgba(0,0,0,.45), 0 0 14px rgba(221,235,255,.25); }
+.ball .ini { font-family: var(--font-title); font-size: calc(var(--s) * .42); color: var(--gold); opacity: .8; }
+.ball img { position: absolute; inset: 3px; width: calc(100% - 6px); height: calc(100% - 6px); border-radius: 50%; object-fit: cover; }
+.ball::before { content: ''; position: absolute; z-index: 2; left: 14%; top: 8%; width: 42%; height: 26%; border-radius: 50%; transform: rotate(-28deg); filter: blur(1px); background: linear-gradient(rgba(255,255,255,.75), rgba(255,255,255,0)); }
+.ball::after { content: ''; position: absolute; inset: 0; z-index: 2; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle at 70% 78%, rgba(200,225,255,.35), transparent 40%), radial-gradient(circle, transparent 62%, rgba(221,235,255,.28) 100%); }
+.nm { margin-top: 5px; width: max-content; max-width: calc(var(--s) * 1.1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center;
+  font-weight: 700; font-size: clamp(11px, calc(var(--s) * .15), 13px); color: var(--snow); text-shadow: 0 1px 3px #000, 0 0 8px rgba(5,11,32,.9); }
+
+.orn.admin .ball { box-shadow: inset 0 0 0 3px var(--gold-glow), inset 0 0 18px 6px rgba(233,196,90,.55), 0 0 26px 6px rgba(255,231,154,.45), 0 6px 18px rgba(0,0,0,.5); }
+.orn.admin .ball::after { background: radial-gradient(circle at 30% 25%, rgba(255,231,154,.5), transparent 45%), linear-gradient(135deg, rgba(233,196,90,.3), rgba(233,196,90,0) 60%), radial-gradient(circle, transparent 60%, rgba(255,231,154,.4) 100%); }
+.orn.admin .nm { color: var(--gold-glow); letter-spacing: .14em; font-weight: 800; }
+.crown { position: absolute; left: 50%; top: calc(var(--cord) - var(--s) * .34); z-index: 3; transform: translateX(-50%); font-size: calc(var(--s) * .36); color: var(--gold); filter: drop-shadow(0 0 6px var(--gold-glow)); }
+
+.topbar { position: fixed; z-index: 6; top: max(12px, env(safe-area-inset-top)); left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px; pointer-events: none; }
+.chip, .icon-btn { pointer-events: auto; color: var(--snow); background: rgba(5,11,32,.72); border: 1px solid rgba(233,196,90,.35); backdrop-filter: blur(6px); }
+.chip { padding: 9px 16px; border-radius: 999px; font-weight: 700; max-width: 70%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip i { color: var(--gold); }
+.icon-btn { width: 44px; height: 44px; border-radius: 50%; font-size: 1rem; cursor: pointer; }
+.icon-btn:focus-visible { outline: 3px solid var(--gold-glow); outline-offset: 2px; }
+.hint, .banner { position: fixed; z-index: 6; left: 50%; top: calc(max(12px, env(safe-area-inset-top)) + 58px); transform: translateX(-50%); width: min(86%, 380px); margin: 0; padding: 12px 16px; border-radius: 16px; text-align: center; font-size: .92rem; line-height: 1.4; background: rgba(5,11,32,.8); border: 1px solid rgba(221,235,255,.25); color: var(--ice); }
+.banner { border-color: rgba(255,180,168,.45); color: var(--danger); }
+.banner button { margin-left: 6px; font: inherit; font-weight: 700; color: var(--gold); background: none; border: 0; text-decoration: underline; cursor: pointer; }
+.scroll-hint { position: fixed; z-index: 6; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); display: grid; justify-items: center; gap: 2px; font-size: .8rem; color: var(--ice); text-shadow: 0 1px 4px #000; pointer-events: none; transition: opacity .4s; animation: bob 2s ease-in-out infinite; }
+.scroll-hint.gone { opacity: 0; }
+@keyframes bob { 50% { transform: translate(-50%, -6px); } }
+
+/* Etapa 3: botão flutuante, modais, entrada de novas bolas */
+.orn { cursor: pointer; } .orn:focus-visible { outline: 2px solid var(--gold-glow); outline-offset: 4px; border-radius: 12px; }
+.orn.enter > * { animation: dropIn .9s cubic-bezier(.2,.9,.3,1.25) both; }
+.orn.enter .ball { animation: dropIn .9s cubic-bezier(.2,.9,.3,1.25) both, flash 1.8s ease-out; }
+@keyframes dropIn { from { opacity: 0; transform: translateY(-46px) scale(.6); } }
+@keyframes flash { 30% { box-shadow: 0 0 40px 14px rgba(255,231,154,.9), inset 0 0 0 2px #fff; } }
+.fab { position: fixed; z-index: 6; right: max(14px, env(safe-area-inset-right)); bottom: max(16px, env(safe-area-inset-bottom)); max-width: 190px; min-height: 52px; padding: 12px 20px; border-radius: 999px; border: 0; cursor: pointer;
+  font: 800 .9rem/1.15 var(--font-body); letter-spacing: .04em; color: #2a1c00; background: linear-gradient(180deg, var(--gold-glow), var(--gold)); box-shadow: 0 8px 26px rgba(233,196,90,.45); transition: transform .15s; }
+.fab:active { transform: scale(.96); } .fab:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+.fab.done { cursor: default; font-size: .72rem; color: var(--gold-glow); background: rgba(5,11,32,.85); border: 1px solid rgba(233,196,90,.5); box-shadow: none; }
+.fab.done:active { transform: none; }
+.modal { border: 0; padding: 0; background: transparent; color: var(--snow); max-width: none; max-height: none; overflow: visible; margin: auto; }
+.modal::backdrop { background: rgba(2,6,20,.74); backdrop-filter: blur(4px); }
+.modal[open] { animation: pop .28s cubic-bezier(.2,.9,.3,1.1); } .modal[open]::backdrop { animation: fade .28s; }
+@keyframes pop { from { opacity: 0; transform: translateY(16px) scale(.96); } } @keyframes fade { from { opacity: 0; } }
+body:has(dialog[open]) { overflow: hidden; }
+.sheet { width: min(92vw, 380px); max-height: 92dvh; overflow: auto; padding: 24px 22px 20px; border-radius: 26px; text-align: center; background: linear-gradient(180deg, #0a1235, var(--deep)); border: 1px solid rgba(233,196,90,.35); box-shadow: 0 30px 80px rgba(0,0,0,.6); }
+.sheet h2 { font-family: var(--font-title); color: var(--gold-glow); margin: 0 0 8px; font-size: 1.5rem; }
+.sheet .sub { margin-bottom: 8px; } .sheet .btn { margin-top: 10px; }
+.pvwrap { display: grid; place-items: center; margin: 10px 0 16px; }
+.ball.gold { box-shadow: inset 0 0 0 3px var(--gold-glow), inset 0 0 18px 6px rgba(233,196,90,.55), 0 0 26px 6px rgba(255,231,154,.45); }
+.pill-ok { display: inline-flex; gap: 8px; align-items: center; margin: 0 0 6px; padding: 7px 14px; border-radius: 999px; background: rgba(233,196,90,.14); color: var(--gold-glow); font-weight: 700; font-size: .88rem; }
