@@ -107,7 +107,7 @@ body:has(dialog[open]) { overflow: hidden; }
 .pill-ok { display: inline-flex; gap: 8px; align-items: center; margin: 0 0 6px; padding: 7px 14px; border-radius: 999px; background: rgba(233,196,90,.14); color: var(--gold-glow); font-weight: 700; font-size: .88rem; }
 
 /* Etapa 4: botões do sorteio, caixa de presente e revelação */
-.scroll-hint { left: 62%; bottom: calc(max(16px, env(safe-area-inset-bottom)) + 74px); }
+.scroll-hint { left: 50%; bottom: calc(max(16px, env(safe-area-inset-bottom)) + 74px); }
 /* anel de chamada do presente: escala e opacidade conduzidas pelo GSAP (utils/motion.js → ring) */
 .gb-ring { position: absolute; left: 50%; top: 50%; width: 118%; aspect-ratio: 1; translate: -50% -50%; z-index: -1; border-radius: 50%;
   border: 2px solid rgba(255,231,154,.55); pointer-events: none; opacity: 0; }
@@ -157,7 +157,7 @@ body:has(dialog[open]) { overflow: hidden; }
 }
 .scroll-hint { bottom: auto; top: calc(max(12px, env(safe-area-inset-top)) + 64px); animation: none; }
 .hint:not([hidden]) ~ .scroll-hint { display: none; }
-.scroll-hint { padding: 4px 12px; border-radius: 999px; background: rgba(5,11,32,.6); animation: hintfade 1s 5s forwards; }
+.scroll-hint { padding: 4px 12px; border-radius: 999px; background: transparent; animation: hintfade 1s 5s forwards; }
 @keyframes hintfade { to { opacity: 0; visibility: hidden; } }
 /* o GSAP conduz os transforms de .btn/.fab: o CSS não disputa a mesma propriedade */
 html.motion-on .tb-btn { transition: box-shadow var(--t-m), filter var(--t-m), border-color var(--t-m), opacity var(--t-m); }
