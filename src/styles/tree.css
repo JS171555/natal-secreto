@@ -92,18 +92,25 @@ body:has(.tree-page) { background: #031A14; }
   .tb-btn { min-height: 46px; padding: 11px 5px; }
   .tb-btn i { font-size: 1.3rem; }
 }
-.modal { border: 0; padding: 0; background: transparent; color: var(--snow); max-width: none; max-height: none; overflow: visible; margin: auto; }
+.modal { position: fixed; inset: 0; width: min(92vw, 404px); height: auto; border: 0; padding: 0; background: transparent; color: var(--snow); max-width: none; max-height: none; overflow: visible; margin: auto; }
+.modal[open] { display: grid; place-items: center; }
 .modal::backdrop { background: rgba(2,6,20,.74); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
 /* Fundo do diálogo com CSS; o painel fecha imediatamente e sem tween JS. */
 .modal[open]::backdrop { animation: fade .3s var(--ease-out); }
 @keyframes fade { from { opacity: 0; } }
 body:has(dialog[open]) { overflow: hidden; }
-.sheet { position: relative; width: min(92vw, 380px); max-height: 92vh; max-height: 92dvh; overflow: auto; padding: 24px 22px 20px; border-radius: 26px; text-align: center; background: linear-gradient(180deg, #0a1235, var(--deep)); border: 1px solid rgba(233,196,90,.35); box-shadow: 0 30px 80px rgba(0,0,0,.6); }
-.sheet.reveal { padding-bottom: 8px; overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.sheet { position: relative; display: grid; justify-items: stretch; gap: clamp(6px, 1dvh, 10px); width: 100%; max-height: none; overflow: visible; padding: clamp(16px, 3dvh, 24px) clamp(16px, 5vw, 22px); border-radius: 26px; text-align: center; background: linear-gradient(180deg, #0a1235, var(--deep)); border: 1px solid rgba(233,196,90,.35); box-shadow: 0 30px 80px rgba(0,0,0,.6); }
+.sheet.reveal { gap: clamp(6px, 1dvh, 10px); padding: clamp(12px, 2.4dvh, 20px) clamp(14px, 4vw, 22px); overflow: visible; }
 .sheet.reveal #fim { display: inline-flex; align-items: center; justify-content: center; }
-.sheet h2 { font-family: var(--font-title); color: var(--gold-glow); margin: 0 0 8px; font-size: 1.5rem; }
-.sheet .sub { margin-bottom: 8px; } .sheet .btn { margin-top: 10px; }
-.pvwrap { display: grid; place-items: center; margin: 10px 0 16px; }
+.sheet h2 { font-family: var(--font-title); color: var(--gold-glow); margin: 0; font-size: clamp(1.25rem, 3.6dvh, 1.5rem); line-height: 1.15; overflow-wrap: anywhere; }
+.sheet .sub { margin: 0; font-size: clamp(.86rem, 2.1dvh, .98rem); line-height: 1.35; overflow-wrap: anywhere; }
+.sheet .btn { min-height: clamp(38px, 6dvh, 48px); margin: 0; }
+.sheet .msg { margin: 0; padding: 8px 10px; line-height: 1.25; overflow-wrap: anywhere; }
+.sheet .pill-ok { justify-self: center; max-width: 100%; margin: 0; white-space: normal; }
+.sheet .pvwrap { margin: 0; }
+.sheet .ball { width: min(var(--s), 25dvh); height: min(var(--s), 25dvh); }
+.sheet .ball .ini { font-size: min(calc(var(--s) * .42), 10dvh); }
+.sheet .gb { width: min(var(--g), 25dvh); height: min(var(--g), 25dvh); }
 .ball.gold { box-shadow: inset 0 0 0 3px var(--gold-glow), inset 0 0 18px 6px rgba(233,196,90,.55), 0 0 26px 6px rgba(255,231,154,.45); }
 .pill-ok { display: inline-flex; gap: 8px; align-items: center; margin: 0 0 6px; padding: 7px 14px; border-radius: 999px; background: rgba(233,196,90,.14); color: var(--gold-glow); font-weight: 700; font-size: .88rem; }
 
@@ -128,14 +135,15 @@ body:has(dialog[open]) { overflow: hidden; }
 .gb.opening .gb-glow { animation: bang .9s ease-out forwards; }
 @keyframes bang { to { transform: scale(3.2); opacity: 0; } }
 .reveal { overflow: hidden; }
-.gb-btn { position: relative; display: block; margin: 22px auto 14px; padding: 0; border: 0; background: none; cursor: pointer; animation: bounce 2.2s ease-in-out infinite; }
+.gb-btn { position: relative; display: block; margin: 0 auto; padding: 0; border: 0; background: none; cursor: pointer; animation: bounce 2.2s ease-in-out infinite; }
 .gb-btn:focus-visible { outline: 3px solid var(--gold-glow); outline-offset: 8px; border-radius: 16px; }
 .rv-res.in .tiro { animation: rise .8s both; }
 .rv-res.in .pvwrap { animation: zoom 1s .5s cubic-bezier(.2,.9,.3,1.2) both; }
 .rv-res.in .who { animation: rise .8s 1.5s both; }
 .rv-res.in .sub, .rv-res.in .btn { animation: rise .6s 2.1s both; }
-.tiro { margin: 6px 0 0; font: 800 1.5rem var(--font-title); letter-spacing: .12em; color: var(--gold-glow); text-shadow: 0 0 18px rgba(255,231,154,.7); }
-.who { font-size: 1.9rem; }
+.tiro { margin: 0; font: 800 clamp(1.15rem, 4dvh, 1.5rem)/1.1 var(--font-title); letter-spacing: .12em; color: var(--gold-glow); text-shadow: 0 0 18px rgba(255,231,154,.7); }
+.who { font-size: clamp(1.25rem, 5dvh, 1.9rem); line-height: 1.1; overflow-wrap: anywhere; }
+.sheet.reveal .rv-box, .sheet.reveal .rv-res { display: grid; justify-items: center; gap: clamp(4px, 1dvh, 8px); }
 @keyframes rise { from { opacity: 0; transform: translateY(14px); } }
 @keyframes zoom { from { opacity: 0; transform: scale(.3) rotate(-8deg); filter: blur(6px); } }
 
@@ -185,6 +193,37 @@ body:has(dialog[open]) { overflow: hidden; }
   .scene svg { content-visibility: auto; }
   .aurora { animation: none; }
   .scroll-hint { animation: none; }
+}
+@media (max-height: 560px) {
+  .sheet { gap: 5px; padding: 12px 16px; border-radius: 22px; }
+  .sheet.reveal { gap: 5px; padding: 10px 14px; }
+  .sheet h2 { font-size: clamp(1.1rem, 4.4dvh, 1.35rem); }
+  .sheet .sub { font-size: clamp(.78rem, 2dvh, .9rem); line-height: 1.25; }
+  .sheet .btn { min-height: 38px; font-size: .92rem; }
+  .sheet .ball { width: min(var(--s), 22dvh); height: min(var(--s), 22dvh); }
+  .sheet .ball .ini { font-size: min(calc(var(--s) * .42), 8.8dvh); }
+  .sheet .gb { width: min(var(--g), 22dvh); height: min(var(--g), 22dvh); }
+  .sheet .msg { padding: 6px 9px; font-size: .82rem; }
+  .sheet .pill-ok { padding: 6px 10px; font-size: .8rem; }
+  .tiro { font-size: clamp(1.08rem, 3.8dvh, 1.3rem); }
+  .who { font-size: clamp(1.2rem, 4.5dvh, 1.65rem); }
+  .sheet.reveal .rv-box, .sheet.reveal .rv-res { gap: 4px; }
+}
+@media (max-height: 420px) {
+  .sheet { gap: 3px; padding: 8px 12px; border-radius: 18px; }
+  .sheet.reveal { gap: 3px; padding: 7px 10px; }
+  .sheet .star { font-size: 1.6rem; }
+  .sheet h2 { font-size: 1.1rem; }
+  .sheet .sub { font-size: .76rem; line-height: 1.2; }
+  .sheet .btn { min-height: 32px; font-size: .8rem; }
+  .sheet .ball { width: min(var(--s), 18dvh); height: min(var(--s), 18dvh); }
+  .sheet .ball .ini { font-size: min(calc(var(--s) * .42), 7dvh); }
+  .sheet .gb { width: min(var(--g), 20dvh); height: min(var(--g), 20dvh); }
+  .sheet .msg { padding: 5px 8px; font-size: .74rem; }
+  .sheet .pill-ok { padding: 5px 8px; font-size: .72rem; }
+  .tiro { font-size: 1rem; }
+  .who { font-size: 1.18rem; }
+  .sheet.reveal .rv-box, .sheet.reveal .rv-res { gap: 2px; }
 }
 @media (max-height: 460px) and (orientation: landscape) {
   .treebar { bottom: max(6px, env(safe-area-inset-bottom)); padding: 5px; }
