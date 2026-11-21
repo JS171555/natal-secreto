@@ -49,7 +49,6 @@ export function buildScene(L) {
     <radialGradient id="glow"><stop offset="0" stop-color="#FFE79A" stop-opacity=".55"/><stop offset="1" stop-color="#FFE79A" stop-opacity="0"/></radialGradient>
     <radialGradient id="hMoon"><stop offset="0" stop-color="#EAF0FF" stop-opacity=".5"/><stop offset=".55" stop-color="#EAF0FF" stop-opacity=".12"/><stop offset="1" stop-color="#EAF0FF" stop-opacity="0"/></radialGradient>
     <radialGradient id="hWarm"><stop offset="0" stop-color="#FFE79A" stop-opacity=".34"/><stop offset="1" stop-color="#FFE79A" stop-opacity="0"/></radialGradient>
-    <linearGradient id="coneG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE79A" stop-opacity=".16"/><stop offset="1" stop-color="#FFE79A" stop-opacity="0"/></linearGradient>
     <linearGradient id="shine" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".5"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
     <linearGradient id="aurora" x1="0" y1="0" x2="1" y2=".2"><stop offset="0" stop-color="#42e6b4" stop-opacity="0"/><stop offset=".34" stop-color="#42e6b4" stop-opacity=".16"/><stop offset=".68" stop-color="#8a8cff" stop-opacity=".18"/><stop offset="1" stop-color="#8a8cff" stop-opacity="0"/></linearGradient>
     <linearGradient id="ridge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#547b91"/><stop offset="1" stop-color="#173b48"/></linearGradient>
@@ -125,7 +124,6 @@ export function buildScene(L) {
   const drifts = `<path d="M0 ${H - 58}Q${W * 0.32} ${H - 84} ${W * 0.55} ${H - 62}T${W} ${H - 70}V${H}H0Z" fill="#dfe9fb" opacity=".1"/><path d="M0 ${H - 40}Q${W * 0.4} ${H - 58} ${W * 0.7} ${H - 44}T${W} ${H - 50}V${H}H0Z" fill="#eef5ff" opacity=".08"/>`;
   const foreground = `<path d="M0 ${H - 20}Q${W * .18} ${H - 76} ${W * .38} ${H - 33}T${W * .72} ${H - 46}T${W} ${H - 22}V${H}H0Z" fill="url(#drift)" opacity=".24"/><path d="M${W * .08} ${H - 70}q18 -8 36 0 M${W * .78} ${H - 92}q15 -7 31 0" fill="none" stroke="#fff" stroke-opacity=".38" stroke-width="2" stroke-linecap="round"/>`;
   const glow = `<circle cx="${cx}" cy="${sy}" r="${star * 5.5}" fill="url(#glow)"/>`;
-  const cone = `<path class="cone" d="M${cx} ${sy + star * 0.4}L${(cx - W * 0.17).toFixed(0)} ${H - 136}H${(cx + W * 0.17).toFixed(0)}Z" fill="url(#coneG)"/>`;
   const amb = `<ellipse cx="${cx}" cy="${H - 116}" rx="${(Wmax * 0.6).toFixed(0)}" ry="${(P * 0.9).toFixed(0)}" fill="url(#hWarm)" opacity=".5"/>`;
   const sparks = Array.from({ length: 10 }, () => `<circle cx="${(cx + (rnd() - 0.5) * star * 3).toFixed(0)}" cy="${(sy + (rnd() - 0.5) * star * 3).toFixed(0)}" r="${(0.8 + rnd() * 1.4).toFixed(1)}" fill="#FFE79A" opacity=".8"/>`).join('');
   const starEl = `<g class="star-g"><path d="${starPath(cx, sy, star)}" fill="#FFE79A" stroke="#E9C45A" stroke-width="${(star * 0.28).toFixed(0)}" stroke-linejoin="round"/></g>${sparks}`;
@@ -148,6 +146,6 @@ export function buildScene(L) {
   // Cada grupo (g.lyr) é revelado em sequência pelo GSAP: céu → floresta → árvore → brilho → estrela → neve.
   return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true"><defs>${defs.join('')}</defs>`
     + `<g class="lyr" data-lyr="sky">${sky}</g><g class="lyr" data-lyr="forest">${forest}</g>`
-    + `<g class="lyr" data-lyr="tree">${trunk}${tiers}${wires}${bulbs}</g><g class="lyr" data-lyr="glow">${cone}${glow}</g>`
+    + `<g class="lyr" data-lyr="tree">${trunk}${tiers}${wires}${bulbs}</g><g class="lyr" data-lyr="glow">${glow}</g>`
     + `<g class="lyr" data-lyr="star">${starEl}</g><g class="lyr" data-lyr="ground">${snow}${drifts}${amb}${gifts}${sparkle}${foreground}</g></svg>`;
 }

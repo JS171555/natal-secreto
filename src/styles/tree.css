@@ -177,8 +177,6 @@ html.motion-on .tb-btn:hover { transform: none; }
 .cabin .smoke { transform-box: fill-box; transform-origin: center; opacity: 0; animation: puff 5.2s linear infinite; }
 .cabin .s2 { animation-delay: -1.8s; } .cabin .s3 { animation-delay: -3.6s; }
 @keyframes puff { 0% { opacity: 0; transform: translate(0, 0) scale(.5); } 15% { opacity: .38; } 100% { opacity: 0; transform: translate(-10px, -44px) scale(1.7); } }
-.cone { animation: breathe 6.5s ease-in-out infinite; }
-@keyframes breathe { 50% { opacity: .78; } }
 .gifts .sheen { transform-box: fill-box; opacity: 0; animation: swipe 5.5s ease-in-out infinite; }
 .gifts > g:nth-child(2) .sheen { animation-delay: -2.4s; }
 .gifts > g:nth-child(3) .sheen { animation-delay: -4.1s; }
