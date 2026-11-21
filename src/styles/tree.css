@@ -86,11 +86,13 @@ body:has(.tree-page) { background: #031A14; }
   .tb-btn { flex: 1 1 0; min-width: 0; padding: 14px 10px; }
   /* Mantém o botão em formato compacto, sem esconder o floco no estado ocupado. */
   .tb-btn > span:not(.load-mark) { display: none; }
+  .tb-btn.is-busy .flake { width: 1.5rem; height: 1.5rem; }
   .tb-btn i { font-size: 1.5rem; }
 }
 @media (max-width: 380px) {
   .treebar { left: 6px; right: 6px; gap: 3px; padding: 5px; }
   .tb-btn { min-height: 46px; padding: 11px 5px; }
+  .tb-btn.is-busy .flake { width: 1.3rem; height: 1.3rem; }
   .tb-btn i { font-size: 1.3rem; }
 }
 .modal { position: fixed; inset: 0; width: min(92vw, 404px); height: auto; border: 0; padding: 0; background: transparent; color: var(--snow); max-width: none; max-height: none; overflow: visible; margin: auto; }
