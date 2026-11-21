@@ -1,6 +1,7 @@
 body:has(.tree-page) .bg { display: none; }
 body:has(.tree-page) { background: #031A14; }
-.scene { position: relative; width: 100%; overflow: hidden; background: linear-gradient(180deg, #01040f 0%, var(--night) 22%, #081a3a 60%, #0b2a35 82%, var(--deep) 100%); }
+.scene { position: relative; width: 100%; overflow: hidden; isolation: isolate; background: radial-gradient(ellipse at 50% 48%, rgba(19,77,70,.25), transparent 48%), linear-gradient(180deg, #030817 0%, #08152d 30%, #0a2634 66%, #0b3028 100%); }
+.scene::after { content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none; background: linear-gradient(180deg, rgba(1,5,16,.16), transparent 24%, transparent 72%, rgba(1,13,13,.3)), radial-gradient(ellipse at center, transparent 42%, rgba(1,7,18,.22) 100%); }
 .scene svg { position: absolute; inset: 0; display: block; }
 .orns { position: absolute; inset: 0; }
 .snow { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4; }
@@ -8,6 +9,8 @@ body:has(.tree-page) { background: #031A14; }
 .lyr { will-change: opacity; }
 .star-g { transform-box: fill-box; transform-origin: center; animation: twinkle 3.6s ease-in-out infinite; filter: drop-shadow(0 0 18px #FFE79A); }
 @keyframes twinkle { 50% { transform: scale(1.08); filter: drop-shadow(0 0 30px #FFE79A); } }
+.aurora { transform-box: fill-box; transform-origin: center; opacity: .82; animation: aurora-drift 18s ease-in-out infinite alternate; }
+@keyframes aurora-drift { to { opacity: .56; transform: translate(1.5%, 1%) scale(1.03); } }
 
 .orn { position: absolute; width: var(--s); display: flex; flex-direction: column; align-items: center; transform-origin: 50% 0; animation: sway 6s ease-in-out var(--d) infinite alternate; }
 .orn-in { display: flex; flex-direction: column; align-items: center; width: 100%; transform-origin: 50% 0; } /* quem o GSAP anima na entrada */
@@ -33,7 +36,7 @@ body:has(.tree-page) { background: #031A14; }
 .crown { position: absolute; left: 50%; top: calc(var(--cord) - var(--s) * .34); z-index: 3; transform: translateX(-50%); font-size: calc(var(--s) * .36); color: var(--gold); filter: drop-shadow(0 0 6px var(--gold-glow)); }
 
 .topbar { position: fixed; z-index: 6; top: max(12px, env(safe-area-inset-top)); left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px; pointer-events: none; }
-.chip, .icon-btn { pointer-events: auto; color: var(--snow); background: rgba(5,11,32,.72); border: 1px solid rgba(233,196,90,.35); backdrop-filter: blur(6px); }
+.chip, .icon-btn { pointer-events: auto; color: var(--snow); background: linear-gradient(135deg, rgba(9,23,43,.82), rgba(4,29,29,.82)); border: 1px solid rgba(233,196,90,.38); box-shadow: 0 8px 28px rgba(0,0,0,.24), inset 0 1px rgba(255,255,255,.08); backdrop-filter: blur(10px); }
 .chip { padding: 9px 16px; border-radius: 999px; font-weight: 700; max-width: 70%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chip i { color: var(--gold); }
 .icon-btn { position: relative; isolation: isolate; overflow: hidden; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; font-size: 1rem; cursor: pointer; }
@@ -61,12 +64,12 @@ body:has(.tree-page) { background: #031A14; }
 .treebar { position: fixed; z-index: 7; left: 50%; bottom: max(12px, env(safe-area-inset-bottom)); translate: -50% 0;
   display: flex; align-items: stretch; justify-content: center; gap: 8px; padding: 7px;
   max-width: calc(100vw - 16px); border-radius: 999px;
-  background: linear-gradient(180deg, rgba(10,18,53,.82), rgba(3,26,20,.9));
-  border: 1px solid rgba(233,196,90,.32); box-shadow: 0 18px 46px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,231,154,.16);
-  backdrop-filter: blur(8px); }
+  background: linear-gradient(180deg, rgba(14,29,54,.88), rgba(3,28,25,.92));
+  border: 1px solid rgba(233,196,90,.38); box-shadow: 0 18px 50px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,231,154,.2);
+  backdrop-filter: blur(14px) saturate(1.25); }
 .tb-btn { position: relative; isolation: isolate; overflow: hidden; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; gap: 9px;
   min-height: 48px; padding: 12px 18px; border-radius: 999px; cursor: pointer; -webkit-tap-highlight-color: transparent;
-  border: 1px solid rgba(221,235,255,.22); background: rgba(245,247,255,.07); color: var(--snow);
+  border: 1px solid rgba(221,235,255,.24); background: linear-gradient(180deg, rgba(245,247,255,.1), rgba(245,247,255,.035)); color: var(--snow);
   font: 800 .8rem/1 var(--font-body); letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; }
 .tb-btn > * { position: relative; z-index: 1; } /* ripple por baixo, como nos antigos fabs */
 .tb-btn i { font-size: 1.05rem; color: var(--gold-glow); }
@@ -182,4 +185,5 @@ html.motion-on .tb-btn:hover { transform: none; }
 @keyframes swipe { 0% { opacity: 0; transform: translateX(-16px); } 22% { opacity: .32; } 45% { opacity: 0; transform: translateX(42px); } 100% { opacity: 0; transform: translateX(42px); } }
 @media (prefers-reduced-motion: reduce) { /* no corte global, meteor/fumaça/brilho terminam apagados; o resto termina aceso */
   .scene svg { content-visibility: auto; }
+  .aurora { animation: none; }
 }

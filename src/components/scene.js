@@ -50,12 +50,18 @@ export function buildScene(L) {
     <radialGradient id="hMoon"><stop offset="0" stop-color="#EAF0FF" stop-opacity=".5"/><stop offset=".55" stop-color="#EAF0FF" stop-opacity=".12"/><stop offset="1" stop-color="#EAF0FF" stop-opacity="0"/></radialGradient>
     <radialGradient id="hWarm"><stop offset="0" stop-color="#FFE79A" stop-opacity=".34"/><stop offset="1" stop-color="#FFE79A" stop-opacity="0"/></radialGradient>
     <linearGradient id="coneG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE79A" stop-opacity=".16"/><stop offset="1" stop-color="#FFE79A" stop-opacity="0"/></linearGradient>
-    <linearGradient id="shine" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".5"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>`
+    <linearGradient id="shine" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".5"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <linearGradient id="aurora" x1="0" y1="0" x2="1" y2=".2"><stop offset="0" stop-color="#42e6b4" stop-opacity="0"/><stop offset=".34" stop-color="#42e6b4" stop-opacity=".16"/><stop offset=".68" stop-color="#8a8cff" stop-opacity=".18"/><stop offset="1" stop-color="#8a8cff" stop-opacity="0"/></linearGradient>
+    <linearGradient id="ridge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#547b91"/><stop offset="1" stop-color="#173b48"/></linearGradient>
+    <linearGradient id="drift" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2f6ff"/><stop offset="1" stop-color="#a9c2d8"/></linearGradient>
+    <radialGradient id="horizon"><stop offset="0" stop-color="#58b99a" stop-opacity=".19"/><stop offset="1" stop-color="#58b99a" stop-opacity="0"/></radialGradient>`
     + BULB.map((c, i) => `<radialGradient id="h${i}"><stop offset="0" stop-color="${c}" stop-opacity=".55"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></radialGradient>`).join('')
     + `<pattern id="gr" width="90" height="90" patternUnits="userSpaceOnUse">${Array.from({ length: 60 }, () => `<circle cx="${(rnd() * 90).toFixed(1)}" cy="${(rnd() * 90).toFixed(1)}" r="${(0.5 + rnd() * 0.9).toFixed(1)}" fill="#cdeaa8" opacity="${(0.12 + rnd() * 0.25).toFixed(2)}"/>`).join('')}</pattern>`];
 
-  // Céu: pontos luminosos, estrelinhas penduradas por fios, estrelas que piscam, lua e estrela cadente.
+  // Céu profundo com aurora boreal suave, pontos luminosos, lua e estrela cadente.
   let sky = '';
+  const auroraY = H * 0.17;
+  sky += `<g class="aurora"><path d="M${(-W * .08).toFixed(0)} ${(auroraY + H * .12).toFixed(0)}Q${(W * .2).toFixed(0)} ${(auroraY - H * .1).toFixed(0)} ${(W * .48).toFixed(0)} ${(auroraY + H * .04).toFixed(0)}T${(W * 1.08).toFixed(0)} ${(auroraY - H * .05).toFixed(0)}L${(W * 1.08).toFixed(0)} ${(auroraY + H * .24).toFixed(0)}Q${(W * .5).toFixed(0)} ${(auroraY + H * .08).toFixed(0)} ${(-W * .08).toFixed(0)} ${(auroraY + H * .3).toFixed(0)}Z" fill="url(#aurora)"/><path d="M${(-W * .06).toFixed(0)} ${(auroraY + H * .2).toFixed(0)}Q${(W * .45).toFixed(0)} ${(auroraY - H * .02).toFixed(0)} ${(W * 1.04).toFixed(0)} ${(auroraY + H * .12).toFixed(0)}" fill="none" stroke="#a0ffe4" stroke-opacity=".13" stroke-width="2"/></g>`;
   for (let i = 0, n = Math.round(H / 80); i < n; i++) {
     const big = rnd() > 0.88;
     sky += `<circle cx="${(rnd() * W).toFixed(0)}" cy="${(rnd() * H * 0.78).toFixed(0)}" r="${big ? (2.5 + rnd() * 1.6).toFixed(1) : (0.6 + rnd() * 1.3).toFixed(1)}" fill="${big ? '#b5c25e' : rnd() > 0.5 ? '#DDEBFF' : '#FFE79A'}" opacity="${big ? 0.3 : (0.3 + rnd() * 0.5).toFixed(2)}"/>`;
@@ -76,8 +82,12 @@ export function buildScene(L) {
   sky += `<g transform="translate(${(W * 0.66).toFixed(0)} ${(H * 0.05 + 40).toFixed(0)}) rotate(28)"><g class="meteor" style="--md:${(8 + rnd() * 6).toFixed(1)}s">`
     + `<line x1="0" y1="0" x2="-54" y2="0" stroke="url(#shine)" stroke-width="1.6"/><circle r="1.8" fill="#F5F7FF"/></g></g>`;
 
-  // Floresta ao fundo, em três profundidades + casinha aconchegante com janela à lareira.
+  // Horizonte luminoso, montanhas distantes e floresta em planos sucessivos.
   const ground = H - 80; let forest = '';
+  const ridgeY = H - 310;
+  forest += `<ellipse cx="${(W * .52).toFixed(0)}" cy="${(H * .56).toFixed(0)}" rx="${(W * .72).toFixed(0)}" ry="${(H * .34).toFixed(0)}" fill="url(#horizon)"/>`;
+  forest += `<path d="M0 ${ridgeY + 130}L${(W * .15).toFixed(0)} ${ridgeY - 90}L${(W * .25).toFixed(0)} ${ridgeY + 5}L${(W * .42).toFixed(0)} ${ridgeY - 160}L${(W * .57).toFixed(0)} ${ridgeY + 28}L${(W * .76).toFixed(0)} ${ridgeY - 115}L${W} ${ridgeY + 76}V${H}H0Z" fill="url(#ridge)" opacity=".37"/>`;
+  forest += `<path d="M${(W * .42).toFixed(0)} ${ridgeY - 160}l${(W * .09).toFixed(0)} 113l-${(W * .035).toFixed(0)} -27l-${(W * .025).toFixed(0)} 9Z M${(W * .76).toFixed(0)} ${ridgeY - 115}l${(W * .1).toFixed(0)} 99l-${(W * .04).toFixed(0)} -23l-${(W * .03).toFixed(0)} 10Z" fill="#d9e8f4" opacity=".36"/>`;
   [['#0a1f3b', 0.55, 150, 1.0], ['#072a1e', 0.42, 190, 0.8], ['#0a3322', 0.3, 230, 0.62]].forEach(([c, hv, w, o], li) => {
     const col = mix(c, '#031A14', 0.1);
     for (let x = -w * 0.3 - li * 40; x < W + w; x += w * 0.62) {
@@ -113,6 +123,7 @@ export function buildScene(L) {
   const trunk = `<path d="M${cx - tw / 2} ${ty}H${cx + tw / 2}L${cx + tw * 0.65} ${H - 68}H${cx - tw * 0.65}Z" fill="url(#trunk)"/>`;
   const snow = `<path d="M0 ${H - 72}Q${W * 0.22} ${H - 158} ${W * 0.5} ${H - 138}T${W} ${H - 92}V${H}H0Z" fill="url(#snow)"/>`;
   const drifts = `<path d="M0 ${H - 58}Q${W * 0.32} ${H - 84} ${W * 0.55} ${H - 62}T${W} ${H - 70}V${H}H0Z" fill="#dfe9fb" opacity=".1"/><path d="M0 ${H - 40}Q${W * 0.4} ${H - 58} ${W * 0.7} ${H - 44}T${W} ${H - 50}V${H}H0Z" fill="#eef5ff" opacity=".08"/>`;
+  const foreground = `<path d="M0 ${H - 20}Q${W * .18} ${H - 76} ${W * .38} ${H - 33}T${W * .72} ${H - 46}T${W} ${H - 22}V${H}H0Z" fill="url(#drift)" opacity=".24"/><path d="M${W * .08} ${H - 70}q18 -8 36 0 M${W * .78} ${H - 92}q15 -7 31 0" fill="none" stroke="#fff" stroke-opacity=".38" stroke-width="2" stroke-linecap="round"/>`;
   const glow = `<circle cx="${cx}" cy="${sy}" r="${star * 5.5}" fill="url(#glow)"/>`;
   const cone = `<path class="cone" d="M${cx} ${sy + star * 0.4}L${(cx - W * 0.17).toFixed(0)} ${H - 136}H${(cx + W * 0.17).toFixed(0)}Z" fill="url(#coneG)"/>`;
   const amb = `<ellipse cx="${cx}" cy="${H - 116}" rx="${(Wmax * 0.6).toFixed(0)}" ry="${(P * 0.9).toFixed(0)}" fill="url(#hWarm)" opacity=".5"/>`;
@@ -138,5 +149,5 @@ export function buildScene(L) {
   return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true"><defs>${defs.join('')}</defs>`
     + `<g class="lyr" data-lyr="sky">${sky}</g><g class="lyr" data-lyr="forest">${forest}</g>`
     + `<g class="lyr" data-lyr="tree">${trunk}${tiers}${wires}${bulbs}</g><g class="lyr" data-lyr="glow">${cone}${glow}</g>`
-    + `<g class="lyr" data-lyr="star">${starEl}</g><g class="lyr" data-lyr="ground">${snow}${drifts}${amb}${gifts}${sparkle}</g></svg>`;
+    + `<g class="lyr" data-lyr="star">${starEl}</g><g class="lyr" data-lyr="ground">${snow}${drifts}${amb}${gifts}${sparkle}${foreground}</g></svg>`;
 }
