@@ -18,16 +18,17 @@ function tier(cx, yb, w, h) {
 }
 function snowCap(cx, yb, w, h, coverage, layer) {
   const edge = yb - h * (1 - coverage), { L, Rr } = botGeo(cx, edge, w);
-  const count = Math.max(4, Math.min(14, Math.round(w / 80))), wave = rng(7919 + layer * 104729);
-  const weights = Array.from({ length: count }, () => .65 + wave() * .7), total = weights.reduce((a, b) => a + b, 0);
-  const amplitude = h * (.075 + wave() * .075);
-  let p = `M${L} ${yb - h}H${Rr}V${edge}`, x = Rr, y = edge;
-  for (let i = 0; i < count; i++) {
-    const span = i === count - 1 ? x - L : w * weights[i] / total, x1 = i === count - 1 ? L : x - span;
-    const y1 = i === count - 1 ? edge : edge + (wave() * 2 - 1) * amplitude;
-    // Controles na altura das extremidades deixam cada curva suave, sem vértices ou pontas.
-    p += `C${x - span / 3} ${y} ${x1 + span / 3} ${y1} ${x1} ${y1}`;
-    x = x1; y = y1;
+  const wave = rng(7919 + layer * 104729), cycles = Math.max(1, Math.round(w / 76));
+  const segments = cycles * 4, amp = h * (.055 + wave() * .025), phase = wave() * Math.PI * 2, tau = Math.PI * 2;
+  const yAt = (s) => edge + amp * Math.sin(phase + tau * cycles * s / w);
+  const slopeAt = (s) => amp * tau * cycles / w * Math.cos(phase + tau * cycles * s / w);
+  let p = `M${L} ${yb - h}H${Rr}V${yAt(0)}`;
+  for (let i = 0; i < segments; i++) {
+    const s0 = w * i / segments, s1 = w * (i + 1) / segments, span = s1 - s0;
+    const x0 = Rr - s0, x1 = i === segments - 1 ? L : Rr - s1, y0 = yAt(s0), y1 = yAt(s1);
+    const c1y = y0 + slopeAt(s0) * span / 3, c2y = y1 - slopeAt(s1) * span / 3;
+    // Aproxima a senoide com Béziers tangentes; as junções permanecem lisas, sem pontas.
+    p += `C${x0 - span / 3} ${c1y} ${x1 + span / 3} ${c2y} ${x1} ${y1}`;
   }
   return p + 'Z';
 }
