@@ -112,14 +112,18 @@ export function buildScene(L) {
     const c = mix('#082a1a', '#2f7a4a', t * 0.9), d = tier(cx, yb(r), w, P * 1.55);
     defs.push(`<linearGradient id="t${r}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${mix(c, '#9ecb6a', 0.18)}"/><stop offset="1" stop-color="${mix(c, '#031A14', 0.35)}"/></linearGradient>`);
     tiers += `<path d="${d}" fill="url(#t${r})" stroke="${mix(c, '#7fd39a', 0.4)}" stroke-opacity=".45" stroke-width="1.5"/><path d="${d}" fill="url(#gr)"/>`;
-    const hh = P * 1.55, half = w * (r % 3 === 0 ? .29 : .25), shift = w * (r % 2 ? .025 : -.018), base = yb(r);
-    const shelf = `M${(cx - half + shift).toFixed(1)} ${(base - hh * .28).toFixed(1)}Q${(cx - half * .45 + shift).toFixed(1)} ${(base - hh * .43).toFixed(1)} ${(cx + shift).toFixed(1)} ${(base - hh * .47).toFixed(1)}Q${(cx + half * .62 + shift).toFixed(1)} ${(base - hh * .45).toFixed(1)} ${(cx + half + shift).toFixed(1)} ${(base - hh * .29).toFixed(1)}Q${(cx + half * .46 + shift).toFixed(1)} ${(base - hh * .36).toFixed(1)} ${(cx + shift).toFixed(1)} ${(base - hh * .34).toFixed(1)}Q${(cx - half * .52 + shift).toFixed(1)} ${(base - hh * .36).toFixed(1)} ${(cx - half + shift).toFixed(1)} ${(base - hh * .28).toFixed(1)}Z`;
-    tiers += `<path class="snow-cap" d="${shelf}" fill="url(#branchSnow)" stroke="#fff" stroke-opacity=".72" stroke-width="${Math.max(1, w * .004).toFixed(1)}" stroke-linejoin="round"/>`;
-    const dust = Array.from({ length: Math.max(2, Math.round(w / 130)) }, () => {
-      const x = cx + (rnd() - .5) * w * .42, y = base - hh * (.12 + rnd() * .18), rad = 1 + rnd() * Math.min(2.4, w * .006);
-      return `<circle class="snow-dust" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${rad.toFixed(1)}" opacity="${(.52 + rnd() * .36).toFixed(2)}"/>`;
+    const hh = P * 1.55, base = yb(r), f = (n) => n.toFixed(1);
+    const patches = Array.from({ length: w > 500 ? 4 : w > 170 ? 3 : 2 }, () => {
+      const half = w * (.035 + rnd() * .035), x = cx + (rnd() - .5) * w * .32;
+      const y = base - hh * (.16 + rnd() * .2), thick = Math.max(1.4, Math.min(4.5, w * .007));
+      const path = `M${f(x-half)} ${f(y)}Q${f(x-half*.78)} ${f(y-thick*.5)} ${f(x-half*.52)} ${f(y-thick*.58)}Q${f(x-half*.2)} ${f(y-thick*1.18)} ${f(x)} ${f(y-thick*.62)}Q${f(x+half*.34)} ${f(y-thick*.34)} ${f(x+half*.56)} ${f(y-thick*.58)}Q${f(x+half*.84)} ${f(y-thick*.34)} ${f(x+half)} ${f(y)}Q${f(x+half*.52)} ${f(y+thick*.22)} ${f(x)} ${f(y+thick*.14)}Q${f(x-half*.54)} ${f(y+thick*.2)} ${f(x-half)} ${f(y)}Z`;
+      return `<path d="${path}" fill="url(#branchSnow)" opacity="${(.62 + rnd() * .25).toFixed(2)}"/>`;
     }).join('');
-    tiers += `<g fill="#f7fbff">${dust}</g>`;
+    const dust = Array.from({ length: Math.max(2, Math.round(w / 150)) }, () => {
+      const x = cx + (rnd() - .5) * w * .38, y = base - hh * (.1 + rnd() * .2), rad = .55 + rnd() * Math.min(1.25, w * .003);
+      return `<circle cx="${f(x)}" cy="${f(y)}" r="${f(rad)}" opacity="${(.42 + rnd() * .34).toFixed(2)}"/>`;
+    }).join('');
+    tiers += `<g class="snow-patches">${patches}<g fill="#f7fbff">${dust}</g></g>`;
     if (r % 2 === 0 && w > 120) { const st = lightStrand(cx, yb(r), w, r); wires += `<path d="${st.wire}" fill="none" stroke="#E9C45A" stroke-opacity=".3" stroke-width="1.2"/>`; bulbs += st.bulbs; }
   }
   const apex = yb(total - 1) - P * 1.3, sy = apex - star * 0.3, tw = Wmax * 0.13, ty = yb(0) - 40;
