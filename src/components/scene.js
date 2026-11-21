@@ -53,6 +53,7 @@ export function buildScene(L) {
     <linearGradient id="aurora" x1="0" y1="0" x2="1" y2=".2"><stop offset="0" stop-color="#42e6b4" stop-opacity="0"/><stop offset=".34" stop-color="#42e6b4" stop-opacity=".16"/><stop offset=".68" stop-color="#8a8cff" stop-opacity=".18"/><stop offset="1" stop-color="#8a8cff" stop-opacity="0"/></linearGradient>
     <linearGradient id="ridge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#547b91"/><stop offset="1" stop-color="#173b48"/></linearGradient>
     <linearGradient id="drift" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2f6ff"/><stop offset="1" stop-color="#a9c2d8"/></linearGradient>
+    <linearGradient id="branchSnow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#e7f2fb"/><stop offset="1" stop-color="#b9d1e3"/></linearGradient>
     <radialGradient id="horizon"><stop offset="0" stop-color="#58b99a" stop-opacity=".19"/><stop offset="1" stop-color="#58b99a" stop-opacity="0"/></radialGradient>`
     + BULB.map((c, i) => `<radialGradient id="h${i}"><stop offset="0" stop-color="${c}" stop-opacity=".55"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></radialGradient>`).join('')
     + `<pattern id="gr" width="90" height="90" patternUnits="userSpaceOnUse">${Array.from({ length: 60 }, () => `<circle cx="${(rnd() * 90).toFixed(1)}" cy="${(rnd() * 90).toFixed(1)}" r="${(0.5 + rnd() * 0.9).toFixed(1)}" fill="#cdeaa8" opacity="${(0.12 + rnd() * 0.25).toFixed(2)}"/>`).join('')}</pattern>`];
@@ -103,7 +104,7 @@ export function buildScene(L) {
     + `<rect x="24" y="-8" width="5" height="10" rx="1" fill="#152f20"/>`
     + `<circle class="smoke s1" cx="2.5" cy="-27" r="2" fill="#dfe8f7"/><circle class="smoke s2" cx="2.5" cy="-27" r="2.6" fill="#dfe8f7"/><circle class="smoke s3" cx="2.5" cy="-27" r="3.2" fill="#dfe8f7"/></g>`;
 
-  // Árvore principal: galhos, ombros nevados, fio de pisca-pisca e lâmpadas alternadas.
+  // Árvore principal: neve acumulada no interior de cada galho, fio de luzes e lâmpadas.
   const total = R + crown, crownW = [0.72, 0.48, 0.26];
   let tiers = '', wires = '', bulbs = '';
   for (let r = 0; r < total; r++) {
@@ -111,11 +112,14 @@ export function buildScene(L) {
     const c = mix('#082a1a', '#2f7a4a', t * 0.9), d = tier(cx, yb(r), w, P * 1.55);
     defs.push(`<linearGradient id="t${r}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${mix(c, '#9ecb6a', 0.18)}"/><stop offset="1" stop-color="${mix(c, '#031A14', 0.35)}"/></linearGradient>`);
     tiers += `<path d="${d}" fill="url(#t${r})" stroke="${mix(c, '#7fd39a', 0.4)}" stroke-opacity=".45" stroke-width="1.5"/><path d="${d}" fill="url(#gr)"/>`;
-    const hh = P * 1.55; // neve acumulada nos ombros (laterais), onde o galho é visível
-    for (const sgn of [-1, 1]) {
-      const x0 = cx + sgn * w * 0.06, y0 = yb(r) - hh * 0.94, xm = cx + sgn * w * 0.22, ym = yb(r) - hh * 0.42, x1 = cx + sgn * (w / 2 - 2), y1 = yb(r) - 1;
-      tiers += `<path d="M${x0.toFixed(1)} ${y0.toFixed(1)}Q${xm.toFixed(1)} ${ym.toFixed(1)} ${x1.toFixed(1)} ${y1.toFixed(1)}" fill="none" stroke="#eef4ff" stroke-opacity=".34" stroke-width="${(2 + w * 0.004).toFixed(1)}" stroke-linecap="round"/>`;
-    }
+    const hh = P * 1.55, half = w * (r % 3 === 0 ? .29 : .25), shift = w * (r % 2 ? .025 : -.018), base = yb(r);
+    const shelf = `M${(cx - half + shift).toFixed(1)} ${(base - hh * .28).toFixed(1)}Q${(cx - half * .45 + shift).toFixed(1)} ${(base - hh * .43).toFixed(1)} ${(cx + shift).toFixed(1)} ${(base - hh * .47).toFixed(1)}Q${(cx + half * .62 + shift).toFixed(1)} ${(base - hh * .45).toFixed(1)} ${(cx + half + shift).toFixed(1)} ${(base - hh * .29).toFixed(1)}Q${(cx + half * .46 + shift).toFixed(1)} ${(base - hh * .36).toFixed(1)} ${(cx + shift).toFixed(1)} ${(base - hh * .34).toFixed(1)}Q${(cx - half * .52 + shift).toFixed(1)} ${(base - hh * .36).toFixed(1)} ${(cx - half + shift).toFixed(1)} ${(base - hh * .28).toFixed(1)}Z`;
+    tiers += `<path class="snow-cap" d="${shelf}" fill="url(#branchSnow)" stroke="#fff" stroke-opacity=".72" stroke-width="${Math.max(1, w * .004).toFixed(1)}" stroke-linejoin="round"/>`;
+    const dust = Array.from({ length: Math.max(2, Math.round(w / 130)) }, () => {
+      const x = cx + (rnd() - .5) * w * .42, y = base - hh * (.12 + rnd() * .18), rad = 1 + rnd() * Math.min(2.4, w * .006);
+      return `<circle class="snow-dust" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${rad.toFixed(1)}" opacity="${(.52 + rnd() * .36).toFixed(2)}"/>`;
+    }).join('');
+    tiers += `<g fill="#f7fbff">${dust}</g>`;
     if (r % 2 === 0 && w > 120) { const st = lightStrand(cx, yb(r), w, r); wires += `<path d="${st.wire}" fill="none" stroke="#E9C45A" stroke-opacity=".3" stroke-width="1.2"/>`; bulbs += st.bulbs; }
   }
   const apex = yb(total - 1) - P * 1.3, sy = apex - star * 0.3, tw = Wmax * 0.13, ty = yb(0) - 40;
