@@ -65,6 +65,7 @@ export function buildScene(L) {
     <linearGradient id="snow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a9bfe6"/><stop offset="1" stop-color="#4d6694"/></linearGradient>
     <radialGradient id="glow"><stop offset="0" stop-color="#FFE79A" stop-opacity=".55"/><stop offset="1" stop-color="#FFE79A" stop-opacity="0"/></radialGradient>
     <radialGradient id="hMoon"><stop offset="0" stop-color="#EAF0FF" stop-opacity=".5"/><stop offset=".55" stop-color="#EAF0FF" stop-opacity=".12"/><stop offset="1" stop-color="#EAF0FF" stop-opacity="0"/></radialGradient>
+    <radialGradient id="moonSurface" cx="32%" cy="27%" r="78%"><stop offset="0" stop-color="#fffdf0"/><stop offset=".58" stop-color="#e8edf9"/><stop offset="1" stop-color="#aab8d6"/></radialGradient>
     <radialGradient id="hWarm"><stop offset="0" stop-color="#FFE79A" stop-opacity=".34"/><stop offset="1" stop-color="#FFE79A" stop-opacity="0"/></radialGradient>
     <linearGradient id="shine" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".5"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
     <linearGradient id="aurora" x1="0" y1="0" x2="1" y2=".2"><stop offset="0" stop-color="#42e6b4" stop-opacity="0"/><stop offset=".34" stop-color="#42e6b4" stop-opacity=".16"/><stop offset=".68" stop-color="#8a8cff" stop-opacity=".18"/><stop offset="1" stop-color="#8a8cff" stop-opacity="0"/></linearGradient>
@@ -91,11 +92,19 @@ export function buildScene(L) {
     const x = rnd() * W, y = rnd() * H * 0.4;
     sky += `<circle class="tw" style="--d:${(-rnd() * 4).toFixed(2)}s" cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${(1.3 + rnd() * 1.1).toFixed(1)}" fill="#F5F7FF" opacity=".9"/>`;
   }
-  const mx = W * 0.84, my = H * 0.06 + 30, mr = Math.max(14, Math.min(26, W * 0.03));
-  sky += `<g class="moon"><circle class="moon-h" cx="${mx.toFixed(0)}" cy="${my.toFixed(0)}" r="${(mr * 3).toFixed(0)}" fill="url(#hMoon)"/>`
-    + `<circle cx="${mx.toFixed(0)}" cy="${my.toFixed(0)}" r="${mr.toFixed(1)}" fill="#E8EDFB" opacity=".92"/>`
-    + `<circle cx="${(mx - mr * 0.3).toFixed(1)}" cy="${(my - mr * 0.2).toFixed(1)}" r="${(mr * 0.16).toFixed(1)}" fill="#c9d4ee" opacity=".6"/>`
-    + `<circle cx="${(mx + mr * 0.25).toFixed(1)}" cy="${(my + mr * 0.3).toFixed(1)}" r="${(mr * 0.12).toFixed(1)}" fill="#c9d4ee" opacity=".5"/></g>`;
+  const sy = yb(R + crown - 1) - P * 1.3 - star * .3;
+  const mx = cx + Math.min(W * .28, star * 3), my = sy - star * .75;
+  const mr = Math.max(20, Math.min(38, W * .055));
+  const craterData = [
+    [mx - mr * .3, my - mr * .16, mr * .16], [mx + mr * .3, my - mr * .28, mr * .21],
+    [mx + mr * .1, my + mr * .3, mr * .12], [mx - mr * .32, my + mr * .3, mr * .08],
+  ];
+  const craters = craterData.map(([x, y, r]) => `<g><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" fill="#92a1c1" opacity=".32"/>`
+    + `<path d="M${(x - r * .62).toFixed(1)} ${y.toFixed(1)}Q${x.toFixed(1)} ${(y - r * .8).toFixed(1)} ${(x + r * .62).toFixed(1)} ${y.toFixed(1)}" fill="none" stroke="#fff" stroke-opacity=".46" stroke-width="${Math.max(.6, r * .16).toFixed(1)}" stroke-linecap="round"/></g>`).join('');
+  sky += `<g class="moon"><circle class="moon-h" cx="${mx.toFixed(1)}" cy="${my.toFixed(1)}" r="${(mr * 3.3).toFixed(1)}" fill="url(#hMoon)"/>`
+    + `<circle cx="${mx.toFixed(1)}" cy="${my.toFixed(1)}" r="${mr.toFixed(1)}" fill="url(#moonSurface)" stroke="#fff" stroke-opacity=".68" stroke-width="${(mr * .055).toFixed(1)}"/>`
+    + `<path d="M${(mx - mr * .54).toFixed(1)} ${(my - mr * .25).toFixed(1)}Q${(mx - mr * .2).toFixed(1)} ${(my - mr * .62).toFixed(1)} ${(mx + mr * .18).toFixed(1)} ${(my - mr * .55).toFixed(1)}" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="${(mr * .035).toFixed(1)}" stroke-linecap="round"/>`
+    + craters + `</g>`;
   sky += `<g transform="translate(${(W * 0.66).toFixed(0)} ${(H * 0.05 + 40).toFixed(0)}) rotate(28)"><g class="meteor" style="--md:${(8 + rnd() * 6).toFixed(1)}s">`
     + `<line x1="0" y1="0" x2="-54" y2="0" stroke="url(#shine)" stroke-width="1.6"/><circle r="1.8" fill="#F5F7FF"/></g></g>`;
 
@@ -136,7 +145,7 @@ export function buildScene(L) {
     wires += `<path d="${st.wire}" fill="none" stroke="#E9C45A" stroke-opacity=".3" stroke-width="1.2"/>`;
     bulbs += st.bulbs;
   }
-  const apex = yb(total - 1) - P * 1.3, sy = apex - star * 0.3, tw = Wmax * 0.13, ty = yb(0) - 40;
+  const tw = Wmax * 0.13, ty = yb(0) - 40;
   const trunk = `<path d="M${cx - tw / 2} ${ty}H${cx + tw / 2}L${cx + tw * 0.65} ${H - 68}H${cx - tw * 0.65}Z" fill="url(#trunk)"/>`;
   const snow = `<path d="M0 ${H - 72}Q${W * 0.22} ${H - 158} ${W * 0.5} ${H - 138}T${W} ${H - 92}V${H}H0Z" fill="url(#snow)"/>`;
   const drifts = `<path d="M0 ${H - 58}Q${W * 0.32} ${H - 84} ${W * 0.55} ${H - 62}T${W} ${H - 70}V${H}H0Z" fill="#dfe9fb" opacity=".1"/><path d="M0 ${H - 40}Q${W * 0.4} ${H - 58} ${W * 0.7} ${H - 44}T${W} ${H - 50}V${H}H0Z" fill="#eef5ff" opacity=".08"/>`;
