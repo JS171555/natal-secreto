@@ -14,6 +14,21 @@ import { LOAD, hideLoading, showLoading } from './components/ui-loading.js';
 const app = document.getElementById('app');
 let currentUser = null, recovery = false, tree = null;
 
+// Mantém os gestos de rolagem, mas evita zoom por pinça/gestos no iOS, Android e Windows touch.
+const blockZoomGesture = (event) => event.preventDefault();
+document.addEventListener('gesturestart', blockZoomGesture, { passive: false });
+document.addEventListener('gesturechange', blockZoomGesture, { passive: false });
+document.addEventListener('touchmove', (event) => {
+  if (event.touches?.length > 1) event.preventDefault();
+}, { passive: false });
+window.addEventListener('wheel', (event) => {
+  if (event.ctrlKey || event.metaKey) event.preventDefault();
+}, { passive: false });
+window.addEventListener('keydown', (event) => {
+  if (!(event.ctrlKey || event.metaKey)) return;
+  if (['+', '=', '-', '_', '0'].includes(event.key) || ['NumpadAdd', 'NumpadSubtract', 'Numpad0'].includes(event.code)) event.preventDefault();
+}, true);
+
 initInteractions(); // microinterações delegadas: um único conjunto de listeners para o app todo
 
 // O splash do HTML existe antes do bundle; ao chamar showLoading() agora, o GSAP
