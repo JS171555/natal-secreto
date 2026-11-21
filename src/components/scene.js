@@ -136,7 +136,7 @@ export function buildScene(L) {
   }
   const apex = yb(total - 1) - P * 1.3, sy = apex - star * 0.3, tw = Wmax * 0.13, ty = yb(0) - 40;
   const trunk = `<path d="M${cx - tw / 2} ${ty}H${cx + tw / 2}L${cx + tw * 0.65} ${H - 68}H${cx - tw * 0.65}Z" fill="url(#trunk)"/>`;
-  const snow = `<path d="M0 ${H - 72}Q${W * 0.22} ${H - 158} ${W * 0.5} ${H - 138}T${W} ${H - 92}V${H}H0Z" fill="url(#snow)"/>`;
+  const snow = `<path d="M0 ${H - 72}Q${W * 0.22} ${H - 158} ${W * 0.5} ${H - 138}T${W} ${H - 92}L${W} ${H - 60}Q${W * 0.75} ${H - 76} ${W * 0.5} ${H - 78}T0 ${H - 48}Z" fill="url(#snow)"/>`;
   const drifts = `<path d="M0 ${H - 58}Q${W * 0.32} ${H - 84} ${W * 0.55} ${H - 62}T${W} ${H - 70}V${H}H0Z" fill="#dfe9fb" opacity=".1"/><path d="M0 ${H - 40}Q${W * 0.4} ${H - 58} ${W * 0.7} ${H - 44}T${W} ${H - 50}V${H}H0Z" fill="#eef5ff" opacity=".08"/>`;
   const foreground = `<path d="M0 ${H - 20}Q${W * .18} ${H - 76} ${W * .38} ${H - 33}T${W * .72} ${H - 46}T${W} ${H - 22}V${H}H0Z" fill="url(#drift)" opacity=".24"/><path d="M${W * .08} ${H - 70}q18 -8 36 0 M${W * .78} ${H - 92}q15 -7 31 0" fill="none" stroke="#fff" stroke-opacity=".38" stroke-width="2" stroke-linecap="round"/>`;
   const glow = `<circle cx="${cx}" cy="${sy}" r="${star * 5.5}" fill="url(#glow)"/>`;
