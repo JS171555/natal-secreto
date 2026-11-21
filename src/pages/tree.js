@@ -29,7 +29,8 @@ export function mountTree(root, { user, name, admin }) {
     <div class="scroll-hint"><i class="fa-solid fa-chevron-up"></i><span>Role para cima</span></div></div>`;
 
   const $ = (s) => root.querySelector(s), scene = $('.scene'), el = document.documentElement;
-  let list = [], adminId = null, lastW = 0, timer = 0, seen = new Set(), unsub = null, unsubDraw = null;
+  const viewportHeight = () => Math.round(window.visualViewport?.height || innerHeight);
+  let list = [], adminId = null, lastW = 0, lastH = 0, timer = 0, seen = new Set(), unsub = null, unsubDraw = null;
   let dstate = { done: false, drawnAt: null, mine: null }, stopRing = () => {}, stopNet = () => {};
   const stopSnow = startSnow($('.snow'));
   const net = $('.banner.net');
@@ -54,8 +55,8 @@ export function mountTree(root, { user, name, admin }) {
   };
 
   const draw = (isFirst) => {
-    const W = el.clientWidth, fromBottom = el.scrollHeight - scrollY, L = computeLayout(list, W, innerHeight);
-    lastW = W; scene.style.height = L.H + 'px';
+    const W = el.clientWidth, H = viewportHeight(), fromBottom = el.scrollHeight - scrollY, L = computeLayout(list, W, H);
+    lastW = W; lastH = H; scene.style.height = L.H + 'px';
     const ids = new Set(list.map((p) => p.user_id)), fresh = isFirst ? new Set() : new Set([...ids].filter((i) => !seen.has(i)));
     seen = ids;
     scene.innerHTML = buildScene(L) + `<div class="orns">${L.items.map((it) => ornamentHTML(it, L.S, it.p.user_id === adminId, fresh.has(it.p.user_id))).join('')}</div>`;
@@ -77,11 +78,17 @@ export function mountTree(root, { user, name, admin }) {
   };
 
   const onResize = () => {
-    if (!scene.isConnected) { removeEventListener('resize', onResize); removeEventListener('scroll', onScroll); return; }
-    clearTimeout(timer); timer = setTimeout(() => el.clientWidth !== lastW && draw(false), 150);
+    if (!scene.isConnected) {
+      removeEventListener('resize', onResize); removeEventListener('scroll', onScroll);
+      window.visualViewport?.removeEventListener('resize', onResize); return;
+    }
+    clearTimeout(timer); timer = setTimeout(() => {
+      if (el.clientWidth !== lastW || viewportHeight() !== lastH) draw(false);
+    }, 150);
   };
   const onScroll = () => { if (!scene.isConnected) return; $('.scroll-hint').classList.toggle('gone', el.scrollHeight - scrollY - innerHeight > 160); };
-  addEventListener('resize', onResize); addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', onResize); window.visualViewport?.addEventListener('resize', onResize, { passive: true });
+  addEventListener('scroll', onScroll, { passive: true });
 
   /* ----------------------------- participação ------------------------------ */
 
