@@ -19,7 +19,7 @@ function tier(cx, yb, w, h) {
 function snowCap(cx, yb, w, h, coverage, layer) {
   const edge = yb - h * (1 - coverage), { L, Rr } = botGeo(cx, edge, w);
   const wave = rng(7919 + layer * 104729), cycles = Math.max(1, Math.round(w / 76));
-  const segments = cycles * 4, amp = h * (.055 + wave() * .025), phase = wave() * Math.PI * 2, tau = Math.PI * 2;
+  const segments = cycles * 4, amp = h * (.045 + wave() * .02), phase = wave() * Math.PI * 2, tau = Math.PI * 2;
   const yAt = (s) => edge + amp * Math.sin(phase + tau * cycles * s / w);
   const slopeAt = (s) => amp * tau * cycles / w * Math.cos(phase + tau * cycles * s / w);
   let p = `M${L} ${yb - h}H${Rr}V${yAt(0)}`;
