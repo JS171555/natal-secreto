@@ -8,25 +8,53 @@ import { renderProfileSetup } from './pages/profile-setup.js';
 import { renderNotice } from './pages/home.js';
 import { flags } from './services/auth.js';
 import { mountTree } from './pages/tree.js';
+import { initInteractions, swap } from './utils/motion.js';
+import { LOAD, hideLoading, showLoading } from './components/ui-loading.js';
 
 const app = document.getElementById('app');
-let currentUser = null, recovery = false;
+let currentUser = null, recovery = false, tree = null;
 
-const showAuth = (view = 'login', notice) =>
-  ({ login: renderLogin, register: renderRegister, forgot: renderForgot }[view] || renderLogin)(app, showAuth, notice);
+initInteractions(); // microinterações delegadas: um único conjunto de listeners para o app todo
+
+// O splash do HTML existe antes do bundle; ao chamar showLoading() agora, o GSAP
+// assume o floco imediatamente — inclusive enquanto o Supabase responde ao auth.
+showLoading(LOAD.tree);
+// O onAuthStateChange do Supabase pode não chegar nunca (sem rede, projeto fora do ar).
+// Nesse caso o splash do HTML viraria tela presa: depois de 20s ele sai de cena e
+// oferece o login, que é a única coisa que ainda faz sentido oferecer.
+setTimeout(() => {
+  if (app.children.length) return;
+  hideLoading();
+  showAuth('login', 'Não foi possível falar com o servidor. Verifique sua conexão e tente de novo.');
+}, 20000);
+
+/** Troca de tela com transição, encerrando antes a árvore montada (neve, realtime, anéis). */
+const mount = (render, opts) => {
+  if (tree) { tree.destroy(); tree = null; }
+  return swap(app, render, opts);
+};
+
+const showAuth = (view = 'login', notice) => {
+  hideLoading();
+  const render = ({ login: renderLogin, register: renderRegister, forgot: renderForgot }[view] || renderLogin);
+  return mount(() => render(app, showAuth, notice));
+};
 
 async function enter(user) {
-  renderNotice(app, 'Natal Secreto', 'Carregando…');
+  showLoading(LOAD.tree); // o mesmo padrão do app cobre todo o carregamento inicial
   try {
     const profile = await getProfile(user.id);
-    if (!profile?.display_name) return renderProfileSetup(app, user, () => enter(user));
-    mountTree(app, { user, name: profile.display_name, admin: await isAdmin() });
+    if (!profile?.display_name) { hideLoading(); return mount(() => renderProfileSetup(app, user, () => enter(user))); }
+    const admin = await isAdmin();
+    await mount(() => { tree = mountTree(app, { user, name: profile.display_name, admin }); });
   } catch {
-    renderNotice(app, 'Não foi possível carregar', 'Verifique sua conexão e se o banco do Supabase foi configurado.', 'Tentar de novo', () => enter(user));
+    hideLoading();
+    mount(() => renderNotice(app, 'Não foi possível carregar', 'Verifique sua conexão e se o banco do Supabase foi configurado.', 'Tentar de novo', () => enter(user)));
   }
 }
 
 if (!configured) {
+  hideLoading();
   renderNotice(app, 'Configuração pendente', 'Copie .env.example para .env e informe VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.');
 } else {
   supabase.auth.onAuthStateChange((event, session) => {
@@ -34,7 +62,7 @@ if (!configured) {
     setTimeout(() => {
       if (event === 'PASSWORD_RECOVERY') {
         recovery = true;
-        return renderReset(app, () => { recovery = false; currentUser = null; supabase.auth.getSession().then(({ data }) => data.session && (currentUser = data.session.user.id, enter(data.session.user))); });
+        return mount(() => renderReset(app, () => { recovery = false; currentUser = null; supabase.auth.getSession().then(({ data }) => data.session && (currentUser = data.session.user.id, enter(data.session.user))); }));
       }
       if (event === 'SIGNED_OUT' || (event === 'INITIAL_SESSION' && !session)) {
         const expired = event === 'SIGNED_OUT' && currentUser && !flags.manualOut;

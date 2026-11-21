@@ -1,6 +1,9 @@
+import gsap from 'gsap';
 import { dialog } from './participation.js';
 import { photoUrl } from '../services/participants.js';
 import { esc } from '../pages/home.js';
+import { EASE, T, reduced, reveal, burst, shake } from '../utils/motion.js';
+import { LOAD, showLoading, hideLoading } from './ui-loading.js';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const ERR = {
@@ -9,7 +12,7 @@ const ERR = {
   network: 'Falha de conexão. Confira se o sorteio foi feito antes de tentar de novo.', unauthenticated: 'Sua sessão expirou. Entre novamente.',
 };
 
-export const giftBoxHTML = (g = 120) => `<span class="gb" style="--g:${g}px"><span class="gb-glow"></span><span class="gb-body"></span><span class="gb-rib"></span><span class="gb-lid"><i class="gb-bow"></i></span></span>`;
+export const giftBoxHTML = (g = 120) => `<span class="gb" style="--g:${g}px"><span class="gb-ring" aria-hidden="true"></span><span class="gb-glow"></span><span class="gb-body"></span><span class="gb-rib"></span><span class="gb-lid"><i class="gb-bow"></i></span></span>`;
 
 // Janela do botão SORTEIO (todos): mostra o estado, sem nenhum par além do próprio.
 export function openDrawInfo({ done, drawnAt, mine, isParticipant, admin, status, count, onOpenBox }) {
@@ -26,7 +29,7 @@ export function openDrawInfo({ done, drawnAt, mine, isParticipant, admin, status
   }
   const d = dialog(`<div class="sheet"><i class="fa-solid fa-gift star"></i><h2>Sorteio</h2>${body}<button class="btn ghost" id="x" type="button">Fechar</button></div>`);
   d.querySelector('#x').onclick = () => d.close();
-  d.querySelector('#box')?.addEventListener('click', () => { d.close(); onOpenBox(); });
+  d.querySelector('#box')?.addEventListener('click', () => d.close(onOpenBox)); // encadeia depois da saída, sem empilhar
 }
 
 // Confirmação do administrador antes de executar a operação.
@@ -37,58 +40,74 @@ export function openConfirmDraw({ count, run }) {
     <button class="btn gold" id="go" type="button" ${count < 2 ? 'disabled' : ''}>Sim, realizar sorteio</button>
     <button class="btn ghost" id="no" type="button">Cancelar</button>
     <p class="msg err" role="alert" ${count < 2 ? '' : 'hidden'}>${count < 2 ? ERR.not_enough : ''}</p></div>`);
-  const $ = (s) => d.querySelector(s), go = $('#go'), no = $('#no'), msg = $('.sheet > .msg:last-child');
-  let busy = false;
-  d.addEventListener('cancel', (e) => busy && e.preventDefault());
+  const $ = (s) => d.querySelector(s), sheet = $('.sheet'), go = $('#go'), no = $('#no'), msg = $('.sheet > .msg:last-child');
+  d.blocked = false;
   no.onclick = () => d.close();
   go.onclick = async () => {
-    busy = true; go.disabled = no.disabled = true; go.classList.add('busy'); msg.hidden = true;
+    d.blocked = true; go.disabled = no.disabled = true; msg.hidden = true;
+    showLoading(LOAD.draw, { in: sheet }); // mesmo padrão do app, agora dentro do painel
     try {
       await run();
-      d.querySelector('.sheet').innerHTML = `<i class="fa-solid fa-gift star"></i><h2>Sorteio realizado!</h2><p class="sub">Cada participante já pode abrir sua caixa de presente.</p><button class="btn gold" id="fim" type="button">Fechar</button>`;
-      d.querySelector('#fim').onclick = () => d.close();
+      hideLoading({ in: sheet });
+      sheet.innerHTML = `<i class="fa-solid fa-gift star"></i><h2>Sorteio realizado!</h2><p class="sub">Cada participante já pode abrir sua caixa de presente.</p><button class="btn gold" id="fim" type="button">Fechar</button>`;
+      reveal([...sheet.children], { y: 12, each: 0.07, delay: 0.05 });
+      burst(sheet, { count: 22, min: 60, max: 190, size: 8 });
+      $('#fim').onclick = () => d.close();
     } catch (e) {
+      hideLoading({ in: sheet });
       msg.textContent = ERR[e.code] || 'Não foi possível realizar o sorteio. Nada foi gravado.'; msg.hidden = false;
-      go.classList.remove('busy'); go.disabled = e.code === 'already_done'; no.disabled = false;
+      reveal(msg, { y: 8, duration: T.m }); shake(msg, { dist: 5 });
+      go.disabled = e.code === 'already_done'; no.disabled = false;
     }
-    busy = false;
+    d.blocked = false;
   };
 }
 
 // Revelação individual: caixa → suspense → "VOCÊ TIROU!" + foto + nome.
-export function openReveal({ reveal, resolve, revealed, onClose }) {
+export function openReveal({ reveal: revealIt, resolve, revealed, onClose }) {
   const d = dialog(`<div class="sheet reveal" tabindex="-1" autofocus>
     <div class="rv-box"><button class="gb-btn" type="button" aria-label="Abrir a caixa de presente">${giftBoxHTML(150)}</button>
       <h2>Uma surpresa para você!</h2><p class="sub">Toque na caixa para descobrir quem você tirou.</p></div>
     <div class="rv-res" hidden><p class="tiro">VOCÊ TIROU!</p><div class="pvwrap"></div><h2 class="who"></h2>
       <p class="sub">Guarde segredo até o dia da troca!</p><button class="btn gold" id="fim" type="button">Fechar</button></div>
     <p class="msg err" role="alert" hidden></p></div>`);
-  const $ = (s) => d.querySelector(s), msg = $('.msg'), gb = $('.gb');
+  const $ = (s) => d.querySelector(s), msg = $('.msg'), gb = $('.gb'), box = $('.rv-box'), res = $('.rv-res');
   let busy = false;
-  d.addEventListener('cancel', (e) => busy && e.preventDefault());
+  d.blocked = false;
   d.addEventListener('close', () => onClose?.());
   $('#fim').onclick = () => d.close();
 
-  const burst = () => { for (let i = 0; i < 18; i++) { const a = (i / 18) * 6.283, r = 70 + Math.random() * 70, s = document.createElement('span');
-    s.className = 'sp'; s.style.cssText = `--dx:${Math.cos(a) * r}px;--dy:${Math.sin(a) * r - 30}px`; $('.gb-btn').append(s); } };
+  // coreografia do resultado: título → bola com foto → nome → rodapé
+  const choreograph = () => {
+    if (reduced()) return;
+    gsap.timeline()
+      .from(res.querySelector('.tiro'), { opacity: 0, y: 20, scale: 0.82, duration: T.xl, ease: EASE.spring })
+      .from(res.querySelector('.pvwrap'), { opacity: 0, scale: 0.35, rotation: -8, filter: 'blur(6px)', duration: 0.95, ease: EASE.pop }, '-=0.3')
+      .from(res.querySelector('.who'), { opacity: 0, y: 14, duration: T.l }, '-=0.4')
+      .from([res.querySelector('.sub'), res.querySelector('.btn')], { opacity: 0, y: 10, stagger: 0.06, duration: T.m }, '-=0.25');
+  };
+
   const go = async () => {
-    if (busy) return; busy = true; msg.hidden = true;
+    if (busy) return; busy = true; d.blocked = true; msg.hidden = true;
     if (!revealed) gb.classList.add('shake');
     try {
-      const [id] = await Promise.all([reveal(), sleep(revealed ? 150 : 1200)]);
+      const [id] = await Promise.all([revealIt(), sleep(revealed ? 150 : 1200)]);
       const who = id && (await resolve(id));
       if (!who) throw new Error('sem resultado');
-      gb.classList.remove('shake'); gb.classList.add('opening'); burst();
+      gb.classList.remove('shake'); gb.classList.add('opening');
+      burst($('.gb-btn'), { count: 20, min: 45, max: 150, size: 8 }); // faíscas do GSAP
       await sleep(revealed ? 250 : 800);
-      $('.rv-box').hidden = true;
+      box.hidden = true;
       $('.pvwrap').innerHTML = `<span class="ball${who.admin ? ' gold' : ''}" style="--s:200px"><b class="ini">${esc(who.name.charAt(0).toUpperCase())}</b>${who.path ? `<img src="${esc(photoUrl(who.path))}" alt="Foto de ${esc(who.name)}">` : ''}</span>`;
       $('.pvwrap img')?.addEventListener('error', (e) => e.target.remove());
       $('.who').innerHTML = `${who.admin ? '<i class="fa-solid fa-crown"></i> ' : ''}${esc(who.name)}`;
-      $('.rv-res').hidden = false; $('.rv-res').classList.add('in');
+      res.hidden = false; choreograph();
     } catch {
-      gb.classList.remove('shake'); msg.textContent = 'Não foi possível abrir agora. Verifique a conexão e toque na caixa de novo.'; msg.hidden = false;
+      gb.classList.remove('shake');
+      msg.textContent = 'Não foi possível abrir agora. Verifique a conexão e toque na caixa de novo.'; msg.hidden = false;
+      reveal(msg, { y: 8, duration: T.m }); shake(msg, { dist: 5 });
     }
-    busy = false;
+    busy = false; d.blocked = false;
   };
   $('.gb-btn').onclick = go;
   if (revealed) go(); // já revelado: mostra o resultado sem refazer o suspense

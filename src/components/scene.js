@@ -60,5 +60,9 @@ export function buildScene(L) {
   const sparks = Array.from({ length: 10 }, () => `<circle cx="${(cx + (rnd() - 0.5) * star * 3).toFixed(0)}" cy="${(sy + (rnd() - 0.5) * star * 3).toFixed(0)}" r="${(0.8 + rnd() * 1.4).toFixed(1)}" fill="#FFE79A" opacity=".8"/>`).join('');
   const starEl = `<g class="star-g"><path d="${starPath(cx, sy, star)}" fill="#FFE79A" stroke="#E9C45A" stroke-width="${(star * 0.28).toFixed(0)}" stroke-linejoin="round"/></g>${sparks}`;
 
-  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true"><defs>${defs.join('')}</defs>${sky}${forest}${trunk}${tiers}${glow}${starEl}${snow}</svg>`;
+  // Cada grupo (g.lyr) é revelado em sequência pelo GSAP: céu → floresta → árvore → brilho → estrela → neve.
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true"><defs>${defs.join('')}</defs>`
+    + `<g class="lyr" data-lyr="sky">${sky}</g><g class="lyr" data-lyr="forest">${forest}</g>`
+    + `<g class="lyr" data-lyr="tree">${trunk}${tiers}</g><g class="lyr" data-lyr="glow">${glow}</g>`
+    + `<g class="lyr" data-lyr="star">${starEl}</g><g class="lyr" data-lyr="ground">${snow}</g></svg>`;
 }

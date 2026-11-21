@@ -1,4 +1,6 @@
 import * as auth from '../services/auth.js';
+import { reveal, shake, T, reduced } from '../utils/motion.js';
+import { busyRun } from '../components/ui-loading.js';
 
 const field = (id, label, type, attrs = '') =>
   `<label class="field" for="${id}"><span>${label}</span><input id="${id}" name="${id}" type="${type}" ${attrs} required /></label>`;
@@ -11,16 +13,44 @@ const shell = (sub, body) => `
     <p class="msg" role="alert" hidden></p>
   </section></main>`;
 
+/** Card entra em cascata: ícone → título → campos → botões. */
+const cardIn = (root) => {
+  if (reduced()) return;
+  reveal([...root.querySelectorAll('.card > *')], { y: 14, each: 0.07, duration: T.l });
+};
+
+/** Bloco de erro padrão: aparece deslizando e avisa com um empurrão discreto. */
+const showError = (msg, text, at) => {
+  msg.textContent = text; msg.className = 'msg err'; msg.hidden = false;
+  reveal(msg, { y: 10, duration: T.m });
+  if (at) shake(at, { dist: 5 }); else shake(msg, { dist: 5 });
+};
+
+// Nenhum campo obrigatório em branco não deveria virar ida ao servidor.
+const precheck = (form) => {
+  let bad = null;
+  form.querySelectorAll('input[required]').forEach((i) => {
+    const wrap = i.closest('.field'), empty = !i.value.trim();
+    wrap.classList.toggle('is-bad', empty);
+    if (empty && !bad) bad = i;
+  });
+  if (!bad) return true;
+  bad.focus({ preventScroll: true });
+  return bad.closest('.field');
+};
+
 function wire(root, id, fn) {
   const form = root.querySelector(id), msg = root.querySelector('.msg'), btn = form.querySelector('button[type=submit]');
+  form.addEventListener('input', (e) => e.target.closest('.field')?.classList.remove('is-bad'));
   form.addEventListener('submit', async (ev) => {
     ev.preventDefault();
-    msg.hidden = true; btn.disabled = true; btn.classList.add('busy');
-    try { await fn(Object.fromEntries(new FormData(form))); }
-    catch (e) { msg.textContent = e.userMessage || auth.friendlyError(e); msg.className = 'msg err'; msg.hidden = false; }
-    finally { btn.disabled = false; btn.classList.remove('busy'); }
+    msg.hidden = true;
+    const bad = precheck(form);
+    if (bad) return showError(msg, 'Preencha os campos destacados para continuar.', bad);
+    try { await busyRun(btn, () => fn(Object.fromEntries(new FormData(form)))); }
+    catch (e) { showError(msg, e.userMessage || auth.friendlyError(e)); }
   });
-  return (text) => { msg.textContent = text; msg.className = 'msg ok'; msg.hidden = false; };
+  return (text) => { msg.textContent = text; msg.className = 'msg ok'; msg.hidden = false; reveal(msg, { y: 10, duration: T.m }); };
 }
 
 function links(root, go) {
@@ -38,11 +68,13 @@ export function renderLogin(root, go, notice) {
     <button class="btn ghost" id="google" type="button"><i class="fa-brands fa-google"></i> Entrar com Google</button>
     <nav class="links"><a href="#" data-go="register">Criar conta</a><a href="#" data-go="forgot">Esqueci a senha</a></nav>`);
   wire(root, '#f', ({ email, password }) => auth.signIn(email.trim(), password));
-  if (notice) { const m = root.querySelector('.msg'); m.textContent = notice; m.className = 'msg err'; m.hidden = false; }
-  root.querySelector('#google').onclick = () => auth.signInWithGoogle().catch((e) => {
-    const m = root.querySelector('.msg'); m.textContent = auth.friendlyError(e); m.className = 'msg err'; m.hidden = false;
-  });
-  links(root, go);
+  if (notice) showError(root.querySelector('.msg'), notice);
+  root.querySelector('#google').onclick = async (e) => {
+    const btn = e.currentTarget;
+    try { await busyRun(btn, () => auth.signInWithGoogle()); }
+    catch (err) { showError(root.querySelector('.msg'), auth.friendlyError(err), btn); }
+  };
+  links(root, go); cardIn(root);
 }
 
 export function renderRegister(root, go) {
@@ -62,7 +94,7 @@ export function renderRegister(root, go) {
     const data = await auth.signUp(v.name.trim(), v.email.trim(), v.password);
     if (!data.session) ok('Conta criada! Enviamos um link de confirmação para o seu e-mail.');
   });
-  links(root, go);
+  links(root, go); cardIn(root);
 }
 
 export function renderForgot(root, go) {
@@ -73,7 +105,7 @@ export function renderForgot(root, go) {
     </form>
     <nav class="links"><a href="#" data-go="login">Voltar para entrar</a></nav>`);
   const ok = wire(root, '#f', async ({ email }) => { await auth.sendRecovery(email.trim()); ok('Link enviado. Confira sua caixa de entrada.'); });
-  links(root, go);
+  links(root, go); cardIn(root);
 }
 
 export function renderReset(root, onDone) {
@@ -89,4 +121,5 @@ export function renderReset(root, onDone) {
     await auth.updatePassword(v.password);
     onDone();
   });
+  cardIn(root);
 }

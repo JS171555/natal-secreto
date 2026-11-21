@@ -3,6 +3,9 @@
   --gold: #E9C45A; --gold-glow: #FFE79A; --snow: #F5F7FF; --ice: #DDEBFF; --danger: #FFB4A8;
   --font-title: 'Fraunces', Georgia, serif; --font-body: 'Nunito', system-ui, sans-serif;
   --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* tokens de movimento — a mesma escala usada em src/utils/motion.js */
+  --spin: 2.6s; --t-xs: .12s; --t-s: .22s; --t-m: .34s; --t-l: .55s;
+  --ease-out: cubic-bezier(.22,.61,.36,1); --ease-spring: cubic-bezier(.2,.9,.3,1.2);
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; min-height: 100%; }
@@ -26,13 +29,18 @@ h1 { font-family: var(--font-title); font-weight: 800; font-size: 2rem; line-hei
 
 form { display: grid; gap: 14px; text-align: left; }
 .field { display: grid; gap: 6px; font-weight: 600; font-size: .9rem; color: var(--ice); }
+.field > span { transition: color var(--t-m) var(--ease-out); will-change: transform; }
+.field.is-focus > span { color: var(--gold-glow); }
 .field input { font: inherit; font-size: 1rem; color: var(--snow); background: rgba(5,11,32,.7); border: 1px solid rgba(221,235,255,.22);
-  border-radius: 14px; padding: 13px 14px; min-height: 48px; outline: none; transition: border-color .2s, box-shadow .2s; }
+  border-radius: 14px; padding: 13px 14px; min-height: 48px; outline: none; transition: border-color var(--t-m), box-shadow var(--t-m); }
 .field input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(233,196,90,.25); }
+.field.is-bad { animation: none; }
+.field.is-bad input { border-color: rgba(255,180,168,.75); box-shadow: 0 0 0 3px rgba(255,120,100,.16); }
 .check { display: flex; gap: 10px; align-items: flex-start; font-size: .92rem; color: var(--ice); }
 .check input { width: 20px; height: 20px; accent-color: var(--gold); margin-top: 1px; }
 
-.btn { font: inherit; font-weight: 700; font-size: 1rem; width: 100%; min-height: 48px; border-radius: 999px; border: 1px solid transparent; cursor: pointer; transition: transform .15s, box-shadow .2s, opacity .2s; }
+.btn { position: relative; isolation: isolate; overflow: hidden; font: inherit; font-weight: 700; font-size: 1rem; width: 100%; min-height: 48px; border-radius: 999px; border: 1px solid transparent; cursor: pointer;
+  transition: box-shadow var(--t-m), border-color var(--t-m), background-color var(--t-m), color var(--t-m), filter var(--t-m), opacity var(--t-m); }
 .btn:focus-visible, .links a:focus-visible { outline: 3px solid var(--gold-glow); outline-offset: 2px; }
 .btn:active { transform: scale(.97); }
 .btn:disabled { opacity: .6; cursor: progress; }
@@ -40,6 +48,8 @@ form { display: grid; gap: 14px; text-align: left; }
 .btn.ghost { color: var(--snow); background: rgba(245,247,255,.06); border-color: rgba(221,235,255,.3); display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
 .btn.busy { animation: pulse 1s ease-in-out infinite; }
 @keyframes pulse { 50% { opacity: .55; } }
+/* botão ocupado = mesmo floco do padrão, miúdo, sem piscar o texto */
+.btn.is-busy { display: inline-flex; align-items: center; justify-content: center; gap: 10px; opacity: 1; cursor: progress; }
 .or { display: flex; align-items: center; gap: 12px; margin: 16px 0; color: var(--ice); opacity: .6; font-size: .85rem; }
 .or::before, .or::after { content: ''; flex: 1; height: 1px; background: rgba(221,235,255,.25); }
 .links { display: flex; justify-content: space-between; gap: 12px; margin-top: 18px; font-size: .92rem; }
@@ -49,4 +59,51 @@ form { display: grid; gap: 14px; text-align: left; }
 .msg.err { background: rgba(255,120,100,.12); color: var(--danger); border: 1px solid rgba(255,180,168,.35); }
 .msg.ok { background: rgba(233,196,90,.12); color: var(--gold-glow); border: 1px solid rgba(233,196,90,.35); }
 [hidden] { display: none !important; }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+/* ===========================================================================
+   SISTEMA DE CARREGAMENTO — modelo “Carregando a árvore”
+   Um único par visual (floco em rotação + texto) para todo o sistema:
+     .is-boot  tela inteira, antes do bundle   .is-inset dentro de modal/painel
+     .is-card  dentro de um card               .is-mini dentro de um botão
+   Núcleo: src/components/ui-loading.js
+   ========================================================================== */
+.load { display: grid; place-content: center; justify-items: center; gap: 12px; color: var(--ice); text-align: center; }
+.load[hidden] { display: none; }
+.load-pop { display: grid; place-items: center; color: var(--gold); }
+.load-mark { display: grid; place-items: center; will-change: transform; }
+.flake { width: 2.9rem; height: 2.9rem; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round;
+  filter: drop-shadow(0 0 12px rgba(255,231,154,.5)); }
+.flake circle { fill: currentColor; stroke: none; }
+.load-text { margin: 0; font-weight: 700; font-size: .98rem; color: var(--ice); }
+.is-boot { position: fixed; inset: 0; z-index: 30; background: radial-gradient(ellipse at 50% 12%, #101a4a 0%, var(--night-2) 35%, var(--night) 75%); }
+.is-inset { position: absolute; inset: 0; z-index: 3; gap: 14px; border-radius: inherit; background: rgba(3,26,20,.84); backdrop-filter: blur(3px); }
+.is-card { padding: 6px 0 2px; }
+.is-mini .flake { width: 1.15em; height: 1.15em; stroke-width: 1.7; filter: none; }
+/* floco estático de cabeçalho (avisos): mesma linguagem do carregamento, sem girar */
+.flake-mark { display: grid; place-items: center; margin: 0 auto 4px; color: var(--gold); }
+.flake-mark .flake { width: 2.6rem; height: 2.6rem; }
+/* sem GSAP (ou antes do bundle) o floco gira por CSS; com GSAP no comando, .motion-on dá passagem */
+html:not(.motion-on) .flake { animation: spin var(--spin) linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.load.is-still .flake { animation: none; }
+.load.is-still .load-text { animation: blink 1.6s ease-in-out infinite; }
+@keyframes blink { 50% { opacity: .5; } }
+
+/* ------------------------- microinterações e partículas -------------------- */
+.fx-ripple { position: absolute; z-index: -1; border-radius: 50%; pointer-events: none; will-change: transform, opacity;
+  background: radial-gradient(circle, rgba(255,231,154,.55), rgba(255,231,154,.06) 62%, transparent 70%); }
+.fx-part { position: absolute; left: 50%; top: 42%; width: var(--sz); height: var(--sz); margin: calc(var(--sz) / -2) 0 0 calc(var(--sz) / -2);
+  border-radius: 50%; pointer-events: none; box-shadow: 0 0 8px currentColor; }
+/* quem conduz estes transforms é o GSAP: o CSS sai do caminho para não disputar o mesmo frame */
+html.motion-on .btn:active, html.motion-on .fab:active, html.motion-on .icon-btn:active { transform: none; }
+
+@media (hover: hover) { .btn.gold:hover { filter: brightness(1.06); } .btn.ghost:hover { border-color: rgba(233,196,90,.6); } }
+@media (prefers-reduced-motion: reduce) {
+  /* em vez de cortar toda animação, reduzimos ao mínimo: sem deslocamento e sem rotação;
+     o que resta é indicação de estado por opacidade (feita pelo JS, fora deste corte) */
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+  /* indicador de atividade padrão do modo reduzido: pulso de opacidade no rótulo,
+     válido para toda variante do carregamento (boot, inset, card, mini) */
+  .load .load-text, #boot .load-text { animation: blink 1.6s ease-in-out infinite !important; animation-iteration-count: infinite !important; }
+  .load .flake, #boot .flake { animation: none !important; }
+}
