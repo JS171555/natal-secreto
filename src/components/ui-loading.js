@@ -1,4 +1,5 @@
 import { reduced } from '../utils/motion.js';
+import { FLAKE_ARM_PATH } from '../utils/snowflake.js';
 
 /* =============================================================================
    ESTADO DE CARREGAMENTO PADRÃO DO SISTEMA — o modelo “Carregando a árvore”.
@@ -20,9 +21,8 @@ let uid = 0;
 /** Floco de neve em SVG: seis braços iguais, cor = currentColor. */
 export const flakeSVG = () => {
   const id = `flk${++uid}`;
-  const arm = 'M12 12V2.4M12 5.4 9.4 3.2M12 5.4l2.6-2.2M12 8.8 10 7.1M12 8.8l2-1.7';
   return `<svg class="flake" viewBox="0 0 24 24" aria-hidden="true" focusable="false">`
-    + `<defs><path id="${id}" d="${arm}"/></defs>`
+    + `<defs><path id="${id}" d="${FLAKE_ARM_PATH}"/></defs>`
     + [0, 60, 120, 180, 240, 300].map((r) => `<use href="#${id}"${r ? ` transform="rotate(${r} 12 12)"` : ''}/>`).join('')
     + `<circle cx="12" cy="12" r="1.15" stroke="none"/></svg>`;
 };
