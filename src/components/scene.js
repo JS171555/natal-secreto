@@ -16,10 +16,10 @@ function tier(cx, yb, w, h) {
   for (let i = n; i > 0; i--) { const x1 = L + (i - 1) * sw, x0 = L + i * sw; p += `Q${(x0 + x1) / 2} ${yb + d * 2} ${x1} ${yb}`; }
   return p + `Q${cx - w * 0.2} ${yb - h * 0.45} ${cx} ${yb - h}Z`;
 }
-function snowCap(cx, yb, w, h, coverage, layer) {
+function snowCap(cx, yb, w, h, coverage, layer, treeW) {
   const edge = yb - h * (1 - coverage), { L, Rr } = botGeo(cx, edge, w);
-  const wave = rng(7919 + layer * 104729), cycles = Math.max(1, Math.round(w / 76));
-  const segments = cycles * 4, amp = h * (.045 + wave() * .02), phase = wave() * Math.PI * 2, tau = Math.PI * 2;
+  const wave = rng(7919 + layer * 104729), cycles = Math.max(1, Math.round(w * 12 / treeW));
+  const segments = cycles * 4, amp = h * (.045 + wave() * .02) * Math.sqrt(treeW / 900), phase = wave() * Math.PI * 2, tau = Math.PI * 2;
   const yAt = (s) => edge + amp * Math.sin(phase + tau * cycles * s / w);
   const slopeAt = (s) => amp * tau * cycles / w * Math.cos(phase + tau * cycles * s / w);
   let p = `M${L} ${yb - h}H${Rr}V${yAt(0)}`;
@@ -130,7 +130,7 @@ export function buildScene(L) {
     tiers += `<path d="${d}" fill="url(#t${r})" stroke="${mix(c, '#7fd39a', 0.4)}" stroke-opacity=".45" stroke-width="1.5"/><path d="${d}" fill="url(#gr)"/>`;
     defs.push(`<clipPath id="leaf${r}" clipPathUnits="userSpaceOnUse"><path d="${d}"/></clipPath>`);
     const coverage = .4 + .4 * (1 - t);
-    tiers += `<path class="snow-cap" d="${snowCap(cx, yb(r), w, P * 1.55, coverage, r)}" fill="url(#branchSnow)" opacity=".58" clip-path="url(#leaf${r})"/>`;
+    tiers += `<path class="snow-cap" d="${snowCap(cx, yb(r), w, P * 1.55, coverage, r, Wmax)}" fill="url(#branchSnow)" opacity=".58" clip-path="url(#leaf${r})"/>`;
     if (r % 2 === 0 && w > 120) { const st = lightStrand(cx, yb(r), w, r); wires += `<path d="${st.wire}" fill="none" stroke="#E9C45A" stroke-opacity=".3" stroke-width="1.2"/>`; bulbs += st.bulbs; }
   }
   const apex = yb(total - 1) - P * 1.3, sy = apex - star * 0.3, tw = Wmax * 0.13, ty = yb(0) - 40;
