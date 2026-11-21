@@ -69,9 +69,10 @@ export function openReveal({ reveal: revealIt, resolve, revealed, onClose }) {
     <div class="rv-box"><button class="gb-btn" type="button" aria-label="Abrir a caixa de presente">${giftBoxHTML(150)}</button>
       <h2>Uma surpresa para você!</h2><p class="sub">Toque na caixa para descobrir quem você tirou.</p></div>
     <div class="rv-res" hidden><p class="tiro">VOCÊ TIROU!</p><div class="pvwrap"></div><h2 class="who"></h2>
-      <p class="sub">Guarde segredo até o dia da troca!</p><button class="btn gold" id="fim" type="button">Fechar</button></div>
+      <p class="sub">Guarde segredo até o dia da troca!</p></div>
+    <button class="btn gold" id="fim" type="button" hidden>Fechar</button>
     <p class="msg err" role="alert" hidden></p></div>`);
-  const $ = (s) => d.querySelector(s), msg = $('.msg'), gb = $('.gb'), box = $('.rv-box'), res = $('.rv-res');
+  const $ = (s) => d.querySelector(s), msg = $('.msg'), gb = $('.gb'), box = $('.rv-box'), res = $('.rv-res'), closeBtn = $('#fim');
   let busy = false;
   d.blocked = false;
   d.addEventListener('close', () => onClose?.());
@@ -84,7 +85,7 @@ export function openReveal({ reveal: revealIt, resolve, revealed, onClose }) {
       .from(res.querySelector('.tiro'), { opacity: 0, y: 20, scale: 0.82, duration: T.xl, ease: EASE.spring })
       .from(res.querySelector('.pvwrap'), { opacity: 0, scale: 0.35, rotation: -8, filter: 'blur(6px)', duration: 0.95, ease: EASE.pop }, '-=0.3')
       .from(res.querySelector('.who'), { opacity: 0, y: 14, duration: T.l }, '-=0.4')
-      .from([res.querySelector('.sub'), res.querySelector('.btn')], { opacity: 0, y: 10, stagger: 0.06, duration: T.m }, '-=0.25');
+      .from(res.querySelector('.sub'), { opacity: 0, y: 10, duration: T.m }, '-=0.25');
   };
 
   const go = async () => {
@@ -101,7 +102,7 @@ export function openReveal({ reveal: revealIt, resolve, revealed, onClose }) {
       $('.pvwrap').innerHTML = `<span class="ball${who.admin ? ' gold' : ''}" style="--s:200px"><b class="ini">${esc(who.name.charAt(0).toUpperCase())}</b>${who.path ? `<img src="${esc(photoUrl(who.path))}" alt="Foto de ${esc(who.name)}">` : ''}</span>`;
       $('.pvwrap img')?.addEventListener('error', (e) => e.target.remove());
       $('.who').innerHTML = `${who.admin ? '<i class="fa-solid fa-crown"></i> ' : ''}${esc(who.name)}`;
-      res.hidden = false; choreograph();
+      res.hidden = false; closeBtn.hidden = false; choreograph();
     } catch {
       gb.classList.remove('shake');
       msg.textContent = 'Não foi possível abrir agora. Verifique a conexão e toque na caixa de novo.'; msg.hidden = false;

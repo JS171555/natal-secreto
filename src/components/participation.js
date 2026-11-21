@@ -32,7 +32,7 @@ export function dialog(html) {
   d.showModal();
   if (!reduced()) {
     gsap.from(d, { opacity: 0, y: 18, scale: 0.96, duration: T.l, ease: EASE.spring, clearProps: 'transform,opacity' });
-    reveal(d.querySelector('.sheet') ? [...d.querySelector('.sheet').children] : d, { y: 12, each: 0.05, delay: 0.08 });
+    reveal(d.querySelector('.sheet') ? [...d.querySelector('.sheet').children].filter((el) => !el.hidden) : d, { y: 12, each: 0.05, delay: 0.08 });
   }
   return d;
 }
