@@ -78,7 +78,7 @@ export function buildScene(L) {
   // Céu profundo com aurora boreal suave, pontos luminosos, lua e estrela cadente.
   let sky = '';
   const auroraY = H * 0.17;
-  sky += `<g class="aurora"><path d="M${(-W * .08).toFixed(0)} ${(auroraY + H * .12).toFixed(0)}Q${(W * .2).toFixed(0)} ${(auroraY - H * .1).toFixed(0)} ${(W * .48).toFixed(0)} ${(auroraY + H * .04).toFixed(0)}T${(W * 1.08).toFixed(0)} ${(auroraY - H * .05).toFixed(0)}L${(W * 1.08).toFixed(0)} ${(auroraY + H * .24).toFixed(0)}Q${(W * .5).toFixed(0)} ${(auroraY + H * .08).toFixed(0)} ${(-W * .08).toFixed(0)} ${(auroraY + H * .3).toFixed(0)}Z" fill="url(#aurora)"/><path d="M${(-W * .06).toFixed(0)} ${(auroraY + H * .2).toFixed(0)}Q${(W * .45).toFixed(0)} ${(auroraY - H * .02).toFixed(0)} ${(W * 1.04).toFixed(0)} ${(auroraY + H * .12).toFixed(0)}" fill="none" stroke="#a0ffe4" stroke-opacity=".13" stroke-width="2"/></g>`;
+  sky += `<g class="aurora"><path d="M${(-W * .08).toFixed(0)} ${(auroraY + H * .12).toFixed(0)}Q${(W * .2).toFixed(0)} ${(auroraY - H * .1).toFixed(0)} ${(W * .48).toFixed(0)} ${(auroraY + H * .04).toFixed(0)}T${(W * 1.08).toFixed(0)} ${(auroraY - H * .05).toFixed(0)}L${(W * 1.08).toFixed(0)} ${(auroraY + H * .24).toFixed(0)}Q${(W * .5).toFixed(0)} ${(auroraY + H * .08).toFixed(0)} ${(-W * .08).toFixed(0)} ${(auroraY + H * .3).toFixed(0)}Z" fill="url(#aurora)"/></g>`;
   for (let i = 0, n = Math.round(H / 80); i < n; i++) {
     const big = rnd() > 0.88;
     sky += `<circle cx="${(rnd() * W).toFixed(0)}" cy="${(rnd() * H * 0.78).toFixed(0)}" r="${big ? (2.5 + rnd() * 1.6).toFixed(1) : (0.6 + rnd() * 1.3).toFixed(1)}" fill="${big ? '#b5c25e' : rnd() > 0.5 ? '#DDEBFF' : '#FFE79A'}" opacity="${big ? 0.3 : (0.3 + rnd() * 0.5).toFixed(2)}"/>`;
