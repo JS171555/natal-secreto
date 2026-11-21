@@ -95,7 +95,7 @@ html:not(.motion-on) .flake { animation: spin var(--spin) linear infinite; }
 .fx-part { position: absolute; left: 50%; top: 42%; width: var(--sz); height: var(--sz); margin: calc(var(--sz) / -2) 0 0 calc(var(--sz) / -2);
   border-radius: 50%; pointer-events: none; box-shadow: 0 0 8px currentColor; }
 /* quem conduz estes transforms é o GSAP: o CSS sai do caminho para não disputar o mesmo frame */
-html.motion-on .btn:active, html.motion-on .fab:active, html.motion-on .icon-btn:active { transform: none; }
+html.motion-on .btn:active, html.motion-on .tb-btn:active, html.motion-on .icon-btn:active { transform: none; }
 
 @media (hover: hover) { .btn.gold:hover { filter: brightness(1.06); } .btn.ghost:hover { border-color: rgba(233,196,90,.6); } }
 @media (prefers-reduced-motion: reduce) {

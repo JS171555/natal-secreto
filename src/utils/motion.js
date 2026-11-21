@@ -97,10 +97,10 @@ export function flip(outEl, inEl, { label } = {}) {
 
 /* --------------------------- microinterações ------------------------------ */
 
-/* Só elementos cujo transform não pertence a uma animação CSS: .gb-btn (bounce) e
-   .gift (bounce) ficam de fora — eles já têm coreografia própria. */
-const PRESS = '.btn, .fab, .icon-btn, .banner button';
-const HOVER = '.btn, .fab, .icon-btn';
+/* Só elementos cujo transform não pertence a uma animação CSS: a caixa .gb-btn
+   (bounce) fica de fora — ela já tem coreografia própria no modal de revelação. */
+const PRESS = '.btn, .tb-btn, .icon-btn, .banner button';
+const HOVER = '.btn, .tb-btn, .icon-btn';
 
 export function press(el, on) {
   if (!el || reduced()) return;

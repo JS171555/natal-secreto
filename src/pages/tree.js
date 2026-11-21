@@ -5,25 +5,27 @@ import { computeLayout } from '../utils/layout.js';
 import { fetchParticipants, fetchAdminId, subscribeParticipants } from '../services/participants.js';
 import { signOut } from '../services/auth.js';
 import { openParticipate, openCard } from '../components/participation.js';
-import { openDrawInfo, openConfirmDraw, openReveal, giftBoxHTML } from '../components/draw-ui.js';
+import { openDrawInfo, openConfirmDraw, openReveal } from '../components/draw-ui.js';
 import { fetchDrawState, fetchDrawStatus, revealMyResult, runDraw, subscribeDraw } from '../services/draw.js';
 import { esc } from './home.js';
-import { reduced, reveal, hang, burst, pop, ring, T, EASE } from '../utils/motion.js';
+import { reduced, reveal, hang, burst, pop, pulse, T, EASE } from '../utils/motion.js';
 import { LOAD, mark, showLoading, hideLoading, setBusy, lazyLoading, spinMark } from '../components/ui-loading.js';
 import gsap from 'gsap';
 
 export function mountTree(root, { user, name, admin }) {
   root.innerHTML = `<div class="tree-page">
     <div class="scene"></div><canvas class="snow" aria-hidden="true"></canvas>
-    <header class="topbar"><span class="chip">${admin ? '<i class="fa-solid fa-crown"></i> ' : ''}${esc(name)}</span>
-      <button class="icon-btn" id="out" type="button" aria-label="Sair" title="Sair"><i class="fa-solid fa-right-from-bracket"></i></button></header>
+    <header class="topbar"><span class="chip">${admin ? '<i class="fa-solid fa-crown"></i> ' : ''}${esc(name)}</span></header>
     <p class="hint" hidden>A árvore ainda está vazia. As bolas aparecem aqui quando alguém confirmar participação.</p>
     <p class="banner" hidden><span>Não foi possível carregar a árvore.</span> <button type="button" id="retry">Tentar de novo</button></p>
     <p class="banner net" role="status" hidden><span>${mark(' is-mini')}Sem conexão. Reconectando…</span></p>
-    <button class="fab" id="join" type="button"></button>
-    <div class="fab-left"><button class="fab" id="doDraw" type="button" hidden><i class="fa-solid fa-dice"></i> REALIZAR SORTEIO</button>
-      <button class="fab alt" id="drawBtn" type="button"><i class="fa-solid fa-gift"></i> SORTEIO</button></div>
-    <button class="gift" id="gift" type="button" hidden aria-label="Abrir sua surpresa do sorteio">${giftBoxHTML(76)}<small>ABRIR!</small></button>
+    <nav class="treebar" aria-label="Ações da árvore">
+      <button class="tb-btn" id="join" type="button" aria-label="Participar"></button>
+      <button class="tb-btn" id="drawBtn" type="button" aria-label="Sorteio" title="Sorteio"><i class="fa-solid fa-gift"></i><span>SORTEIO</span></button>
+      <button class="tb-btn" id="doDraw" type="button" aria-label="Realizar sorteio" title="Realizar sorteio" hidden><i class="fa-solid fa-dice"></i><span>REALIZAR SORTEIO</span></button>
+      <button class="tb-btn hot" id="gift" type="button" aria-label="Abrir sua surpresa do sorteio" title="Abrir sua surpresa" hidden><i class="fa-solid fa-box-open"></i><span>ABRIR!</span></button>
+      <button class="tb-btn" id="out" type="button" aria-label="Sair" title="Sair"><i class="fa-solid fa-right-from-bracket"></i><span>SAIR</span></button>
+    </nav>
     <div class="scroll-hint"><i class="fa-solid fa-chevron-up"></i><span>Role para cima</span></div></div>`;
 
   const $ = (s) => root.querySelector(s), scene = $('.scene'), el = document.documentElement;
@@ -87,8 +89,12 @@ export function mountTree(root, { user, name, admin }) {
   const updateJoin = () => {
     const done = mine(), closed = !done && dstate.done;
     const was = join.innerHTML;
+    const cfg = done ? ['fa-circle-check', 'PARTICIPAÇÃO CONFIRMADA', 'Participação confirmada']
+      : closed ? ['fa-lock', 'PARTICIPAÇÕES ENCERRADAS', 'Participações encerradas']
+        : ['fa-star', 'PARTICIPAR', 'Participar'];
     join.classList.toggle('done', done || closed); join.disabled = done || closed;
-    join.innerHTML = done ? '<i class="fa-solid fa-circle-check"></i> PARTICIPAÇÃO CONFIRMADA' : closed ? '<i class="fa-solid fa-lock"></i> PARTICIPAÇÕES ENCERRADAS' : '<i class="fa-solid fa-star"></i> PARTICIPAR';
+    join.innerHTML = `<i class="fa-solid ${cfg[0]}"></i><span>${cfg[1]}</span>`;
+    join.setAttribute('aria-label', cfg[2]);
     if (!done && !closed && was !== join.innerHTML && !reduced()) pop(join, { scale: 1.06 }); // o botão se anuncia ao aparecer
   };
   const sig = (l) => l.map((p) => p.user_id + p.photo_path).join();
@@ -119,8 +125,8 @@ export function mountTree(root, { user, name, admin }) {
       giftShown = true; stopRing();
       if (!reduced()) {
         gsap.fromTo(gift, { opacity: 0, scale: 0.5, y: 26 }, { opacity: 1, scale: 1, y: 0, duration: T.xl, ease: EASE.spring, clearProps: 'transform' });
-        reveal(gift.querySelector('small'), { y: 8, delay: 0.25 });
-        stopRing = ring(gift.querySelector('.gb-ring'), { duration: 1.8 });
+        reveal(gift.querySelector('span'), { y: 8, delay: 0.25 });
+        stopRing = pulse(gift.querySelector('i'), { scale: 1.14, duration: 1.5 }); // o ícone respira enquanto não abrir
       }
     } else if (gift.hidden) giftShown = false;
   };
