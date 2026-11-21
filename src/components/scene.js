@@ -16,12 +16,16 @@ function tier(cx, yb, w, h) {
   for (let i = n; i > 0; i--) { const x1 = L + (i - 1) * sw, x0 = L + i * sw; p += `Q${(x0 + x1) / 2} ${yb + d * 2} ${x1} ${yb}`; }
   return p + `Q${cx - w * 0.2} ${yb - h * 0.45} ${cx} ${yb - h}Z`;
 }
-function snowCap(cx, yb, w, h, coverage) {
-  const edge = yb - h * (1 - coverage), { n, sw, d, L, Rr } = botGeo(cx, edge, w);
-  let p = `M${L} ${yb - h}H${Rr}V${edge}`;
-  for (let i = n; i > 0; i--) {
-    const x1 = L + (i - 1) * sw, x0 = L + i * sw;
-    p += `Q${(x0 + x1) / 2} ${edge + d * 2} ${x1} ${edge}`;
+function snowCap(cx, yb, w, h, coverage, layer) {
+  const edge = yb - h * (1 - coverage), { L, Rr } = botGeo(cx, edge, w);
+  const count = Math.max(2, Math.min(7, Math.round(w / 155))), wave = rng(7919 + layer * 104729);
+  const weights = Array.from({ length: count }, () => .65 + wave() * .7), total = weights.reduce((a, b) => a + b, 0);
+  let p = `M${L} ${yb - h}H${Rr}V${edge}`, x = Rr;
+  for (let i = 0; i < count; i++) {
+    const span = i === count - 1 ? x - L : w * weights[i] / total, x1 = i === count - 1 ? L : x - span;
+    const amp = h * (.045 + wave() * .075), dir = wave() > .48 ? 1 : -1;
+    p += `C${x - span * .3} ${edge + dir * amp} ${x1 + span * .3} ${edge + dir * amp} ${x1} ${edge}`;
+    x = x1;
   }
   return p + 'Z';
 }
@@ -123,7 +127,7 @@ export function buildScene(L) {
     tiers += `<path d="${d}" fill="url(#t${r})" stroke="${mix(c, '#7fd39a', 0.4)}" stroke-opacity=".45" stroke-width="1.5"/><path d="${d}" fill="url(#gr)"/>`;
     defs.push(`<clipPath id="leaf${r}" clipPathUnits="userSpaceOnUse"><path d="${d}"/></clipPath>`);
     const coverage = .4 + .4 * (1 - t);
-    tiers += `<path class="snow-cap" d="${snowCap(cx, yb(r), w, P * 1.55, coverage)}" fill="url(#branchSnow)" opacity=".58" clip-path="url(#leaf${r})"/>`;
+    tiers += `<path class="snow-cap" d="${snowCap(cx, yb(r), w, P * 1.55, coverage, r)}" fill="url(#branchSnow)" opacity=".58" clip-path="url(#leaf${r})"/>`;
     if (r % 2 === 0 && w > 120) { const st = lightStrand(cx, yb(r), w, r); wires += `<path d="${st.wire}" fill="none" stroke="#E9C45A" stroke-opacity=".3" stroke-width="1.2"/>`; bulbs += st.bulbs; }
   }
   const apex = yb(total - 1) - P * 1.3, sy = apex - star * 0.3, tw = Wmax * 0.13, ty = yb(0) - 40;
