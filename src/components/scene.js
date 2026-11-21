@@ -84,17 +84,20 @@ export function buildScene(L) {
     const big = rnd() > 0.88;
     sky += `<circle cx="${(rnd() * W).toFixed(0)}" cy="${(rnd() * H * 0.78).toFixed(0)}" r="${big ? (2.5 + rnd() * 1.6).toFixed(1) : (0.6 + rnd() * 1.3).toFixed(1)}" fill="${big ? '#b5c25e' : rnd() > 0.5 ? '#DDEBFF' : '#FFE79A'}" opacity="${big ? 0.3 : (0.3 + rnd() * 0.5).toFixed(2)}"/>`;
   }
-  for (let i = 0; i < 14; i++) {
+  const hangingStarCount = 14; let hangingStarsY = 0;
+  for (let i = 0; i < hangingStarCount; i++) {
     const x = rnd() * W, len = 40 + rnd() * 300, s = 5 + rnd() * 5;
+    hangingStarsY += len + s;
     sky += `<line x1="${x.toFixed(0)}" y1="0" x2="${x.toFixed(0)}" y2="${len.toFixed(0)}" stroke="#3f6a3f" stroke-opacity=".5"/><path d="${starPath(x, len + s, s)}" fill="#8a9a45" opacity=".7"/>`;
   }
+  hangingStarsY /= hangingStarCount;
   for (let i = 0; i < 9; i++) {
     const x = rnd() * W, y = rnd() * H * 0.4;
     sky += `<circle class="tw" style="--d:${(-rnd() * 4).toFixed(2)}s" cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${(1.3 + rnd() * 1.1).toFixed(1)}" fill="#F5F7FF" opacity=".9"/>`;
   }
   const sy = yb(R + crown - 1) - P * 1.3 - star * .3;
-  const mx = cx + Math.min(W * .28, star * 3), my = sy - star * .75;
-  const mr = Math.max(20, Math.min(38, W * .055));
+  const mx = cx + Math.min(W * .28, star * 3), my = (hangingStarsY + sy) / 2;
+  const mr = Math.max(22, Math.min(42, W * .06));
   const craterData = [
     [mx - mr * .3, my - mr * .16, mr * .16], [mx + mr * .3, my - mr * .28, mr * .21],
     [mx + mr * .1, my + mr * .3, mr * .12], [mx - mr * .32, my + mr * .3, mr * .08],
