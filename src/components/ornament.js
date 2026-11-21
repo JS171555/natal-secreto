@@ -1,8 +1,7 @@
 import { photoUrl } from '../services/participants.js';
 import { esc } from '../pages/home.js';
 
-// .orn conduz o balanço (CSS), .orn-in conduz a entrada (GSAP) e .ball o hover (CSS).
-// Separar essas três transformações é o que permite as três ao mesmo tempo.
+// .orn conduz o balanço e o brilho/hover da bola são CSS; .orn-in é a camada independente de entrada.
 export function ornamentHTML(it, S, isAdmin, isNew = false) {
   const real = it.p.profiles?.display_name || 'Participante';
   const name = isAdmin ? 'REI' : real;

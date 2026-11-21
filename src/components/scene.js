@@ -161,7 +161,7 @@ export function buildScene(L) {
   let sparkle = '';
   for (let i = 0; i < 16; i++) sparkle += `<circle class="tw" style="--d:${(-rnd() * 5).toFixed(2)}s" cx="${(rnd() * W).toFixed(0)}" cy="${(H - 136 + rnd() * 58).toFixed(0)}" r="${(0.9 + rnd() * 1).toFixed(1)}" fill="#F5F7FF" opacity=".7"/>`;
 
-  // Cada grupo (g.lyr) é revelado em sequência pelo GSAP: céu → floresta → árvore → brilho → estrela → neve.
+  // Os grupos da cena são SVG estático; os detalhes vivos usam CSS e o canvas de neve.
   return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true"><defs>${defs.join('')}</defs>`
     + `<g class="lyr" data-lyr="sky">${sky}</g><g class="lyr" data-lyr="forest">${forest}</g>`
     + `<g class="lyr" data-lyr="tree">${trunk}${tiers}${wires}${bulbs}</g><g class="lyr" data-lyr="glow">${glow}</g>`

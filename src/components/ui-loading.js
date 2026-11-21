@@ -1,5 +1,4 @@
-import gsap from 'gsap';
-import { reduced, EASE, T } from '../utils/motion.js';
+import { reduced } from '../utils/motion.js';
 
 /* =============================================================================
    ESTADO DE CARREGAMENTO PADRÃO DO SISTEMA — o modelo “Carregando a árvore”.
@@ -11,7 +10,7 @@ import { reduced, EASE, T } from '../utils/motion.js';
      • setBusy(btn, true)             → a mesma marca, miúda, dentro do botão
      • loadingBlock(label)            → o mesmo bloco para caber dentro de um card
 
-   A rotação é um tween do GSAP (pausa com a aba oculta; com “reduzir movimento”
+   A rotação é CSS (pausa com a aba oculta; com “reduzir movimento”
    vira respiração de opacidade no texto). O floco é SVG: funciona antes do
    bundle carregar e não depende do Font Awesome.
    ========================================================================== */
@@ -53,17 +52,18 @@ export const loadingBlock = (label = LOAD.tree) => `<div class="load is-card" ro
 /* --------------------------- cobertura de tela ---------------------------- */
 
 const hosts = new Map(); // host (document.body | painel) → { el, spin, timer }
-const SPIN = 2.6;
 
 /**
  * Floco isolado fora do overlay (banner de conexão, card de status): mesmo
  * movimento do padrão. Devolve a função que desliga — chame ao esconder.
  */
-export function spinMark(el, { duration = SPIN } = {}) {
-  const tw = !el || reduced() ? null : gsap.to(el, { rotate: 360, duration, ease: 'none', repeat: -1 });
-  const off = () => { tw?.kill(); if (el) el.style.transform = ''; };
-  off.pause = () => tw?.pause();
-  off.play = () => tw?.play();
+export function spinMark(el) {
+  const flake = el?.querySelector('.flake');
+  const setPlayback = (state) => { if (flake) flake.style.animationPlayState = state; };
+  const off = () => setPlayback('paused');
+  off.pause = off;
+  off.play = () => setPlayback('running');
+  if (reduced()) off();
   return off;
 }
 
@@ -95,19 +95,11 @@ function mount(host, inset, label) {
   return st;
 }
 
-function animateIn(el) {
-  if (reduced()) { gsap.set(el, { clearProps: 'opacity' }); return; }
-  gsap.fromTo(el, { opacity: 0 }, { opacity: 1, duration: T.m, ease: EASE.out, overwrite: 'auto' });
-  gsap.from(el.querySelector('.load-pop'), { scale: 0.8, duration: T.l, ease: EASE.spring, clearProps: 'transform' });
-  gsap.from(el.querySelector('.load-text'), { y: 8, opacity: 0, duration: T.l, ease: EASE.out, clearProps: 'transform,opacity' });
-}
-
 /** Mostra — ou só troca o rótulo de — um carregamento do padrão. */
 export function showLoading(label = LOAD.tree, { in: host, timeout = 24000 } = {}) {
   const target = host ?? document.body;
   const st = mount(target, !!host, label);
   st.el.hidden = false;
-  animateIn(st.el);
   clearTimeout(st.timer);
   if (!host && timeout) st.timer = setTimeout(() => hideLoading(), timeout); // rede de proteção
   return st.el;
@@ -126,10 +118,9 @@ export function hideLoading({ in: host } = {}) {
   }
   if (st.el.hidden) return;
   clearTimeout(st.timer);
-  // spin é o controlador devolvido por spinMark: chamar como função encerra o tween
+  // spin é o controlador devolvido por spinMark: chamar como função pausa o CSS
   const kill = () => { st.spin?.(); st.el.remove(); hosts.delete(host ?? document.body); };
-  if (reduced()) return kill();
-  gsap.to(st.el, { opacity: 0, duration: T.s, ease: EASE.in, overwrite: 'auto', onComplete: kill });
+  kill();
 }
 
 /** Há um carregamento do padrão visível? (usado pela rede de segurança do boot) */

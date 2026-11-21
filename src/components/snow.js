@@ -17,10 +17,10 @@ export function startSnow(canvas) {
   let W, H, flakes = [], last = performance.now(), raf = 0, lastScroll = scrollY;
 
   const make = () => {
-    const n = clamp(Math.round((W * H) / 9000), 45, 130);
-    flakes = Array.from({ length: n + 8 }, (_, i) => {
+    const n = clamp(Math.round((W * H) / 14000), 30, 82);
+    flakes = Array.from({ length: n + 4 }, (_, i) => {
       const z = Math.random();
-      if (i >= n) { // bokeh: pertinho da "câmera"
+      if (i >= n) { // poucos bokeh em primeiro plano para limitar o custo do canvas
         return { bok: true, x: Math.random() * W, y: Math.random() * H, z: 1, r: 9 + Math.random() * 13, vy: 5 + Math.random() * 9, ph: Math.random() * 6.28, fr: 0.1 + Math.random() * 0.16, amp: 24 + Math.random() * 30, a: 0.1 + Math.random() * 0.15 };
       }
       return { x: Math.random() * W, y: Math.random() * H, z, r: 0.6 + z * z * 2.8, vy: 14 + z * 70 + Math.random() * 10, ph: Math.random() * 6.28, fr: 0.4 + Math.random() * 0.8, amp: 6 + z * 18, a: 0.35 + z * 0.55 };
@@ -39,7 +39,7 @@ export function startSnow(canvas) {
     }
   };
   const resize = () => {
-    const dpr = Math.min(devicePixelRatio || 1, 2); W = innerWidth; H = innerHeight;
+    const dpr = Math.min(devicePixelRatio || 1, 1.5); W = innerWidth; H = innerHeight;
     canvas.width = W * dpr; canvas.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); make(); draw(0);
   };
   const tick = (now) => {

@@ -5,15 +5,14 @@ body:has(.tree-page) { background: #031A14; }
 .scene svg { position: absolute; inset: 0; display: block; }
 .orns { position: absolute; inset: 0; }
 .snow { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4; }
-/* camadas da cena: reveladas em sequência pelo GSAP (utils/motion.js → sceneIn) */
-.lyr { will-change: opacity; }
+/* Camadas SVG estáticas; os detalhes animados usam CSS. */
 .star-g { transform-box: fill-box; transform-origin: center; animation: twinkle 3.6s ease-in-out infinite; filter: drop-shadow(0 0 18px #FFE79A); }
 @keyframes twinkle { 50% { transform: scale(1.08); filter: drop-shadow(0 0 30px #FFE79A); } }
 .aurora { transform-box: fill-box; transform-origin: center; opacity: .82; animation: aurora-drift 18s ease-in-out infinite alternate; }
 @keyframes aurora-drift { to { opacity: .56; transform: translate(1.5%, 1%) scale(1.03); } }
 
 .orn { position: absolute; width: var(--s); display: flex; flex-direction: column; align-items: center; transform-origin: 50% 0; animation: sway 6s ease-in-out var(--d) infinite alternate; }
-.orn-in { display: flex; flex-direction: column; align-items: center; width: 100%; transform-origin: 50% 0; } /* quem o GSAP anima na entrada */
+.orn-in { display: flex; flex-direction: column; align-items: center; width: 100%; transform-origin: 50% 0; }
 @keyframes sway { from { transform: rotate(-1.6deg); } to { transform: rotate(1.6deg); } }
 .cord { width: 1px; height: var(--cord); background: linear-gradient(rgba(245,247,255,.15), rgba(245,247,255,.7)); }
 .cap { position: relative; width: calc(var(--s) * .26); height: calc(var(--s) * .18); margin-bottom: -1px; border-radius: 45% 45% 12% 12% / 70% 70% 12% 12%;
@@ -53,7 +52,7 @@ body:has(.tree-page) { background: #031A14; }
 
 /* Etapa 3: botão flutuante, modais, entrada de novas bolas */
 .orn { cursor: pointer; } .orn:focus-visible { outline: 2px solid var(--gold-glow); outline-offset: 4px; border-radius: 12px; }
-.orn.enter .ball { animation: flash 1.8s ease-out; } /* quem cai é .orn-in, via GSAP */
+.orn.enter .ball { animation: flash 1.8s ease-out; }
 @keyframes flash { 30% { box-shadow: 0 0 40px 14px rgba(255,231,154,.9), inset 0 0 0 2px #fff; } }
 
 /* --------------------------------- BARRA ÚNICA ------------------------------
@@ -70,7 +69,8 @@ body:has(.tree-page) { background: #031A14; }
 .tb-btn { position: relative; isolation: isolate; overflow: hidden; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; gap: 9px;
   min-height: 48px; padding: 12px 18px; border-radius: 999px; cursor: pointer; -webkit-tap-highlight-color: transparent;
   border: 1px solid rgba(221,235,255,.24); background: linear-gradient(180deg, rgba(245,247,255,.1), rgba(245,247,255,.035)); color: var(--snow);
-  font: 800 .8rem/1 var(--font-body); letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; }
+  font: 800 .8rem/1 var(--font-body); letter-spacing: .05em; text-transform: uppercase; white-space: nowrap;
+  transition: transform var(--t-xs) var(--ease-out), box-shadow var(--t-m), filter var(--t-m), border-color var(--t-m), opacity var(--t-m); }
 .tb-btn > * { position: relative; z-index: 1; } /* ripple por baixo, como nos antigos fabs */
 .tb-btn i { font-size: 1.05rem; color: var(--gold-glow); }
 .tb-btn:focus-visible { outline: 3px solid var(--gold-glow); outline-offset: 2px; }
@@ -94,9 +94,8 @@ body:has(.tree-page) { background: #031A14; }
 }
 .modal { border: 0; padding: 0; background: transparent; color: var(--snow); max-width: none; max-height: none; overflow: visible; margin: auto; }
 .modal::backdrop { background: rgba(2,6,20,.74); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
-/* a entrada/saída do dialog é GSAP (components/participation.js → dialog); aqui só o fundo */
+/* Fundo do diálogo com CSS; o painel fecha imediatamente e sem tween JS. */
 .modal[open]::backdrop { animation: fade .3s var(--ease-out); }
-.modal.closing::backdrop { animation: fade .22s var(--ease-out) reverse forwards; }
 @keyframes fade { from { opacity: 0; } }
 body:has(dialog[open]) { overflow: hidden; }
 .sheet { position: relative; width: min(92vw, 380px); max-height: 92vh; max-height: 92dvh; overflow: auto; padding: 24px 22px 20px; border-radius: 26px; text-align: center; background: linear-gradient(180deg, #0a1235, var(--deep)); border: 1px solid rgba(233,196,90,.35); box-shadow: 0 30px 80px rgba(0,0,0,.6); }
@@ -110,9 +109,6 @@ body:has(dialog[open]) { overflow: hidden; }
 
 /* Etapa 4: botões do sorteio, caixa de presente e revelação */
 .scroll-hint { left: 50%; bottom: calc(max(16px, env(safe-area-inset-bottom)) + 74px); }
-/* anel de chamada do presente: escala e opacidade conduzidas pelo GSAP (utils/motion.js → ring) */
-.gb-ring { position: absolute; left: 50%; top: 50%; width: 118%; aspect-ratio: 1; translate: -50% -50%; z-index: -1; border-radius: 50%;
-  border: 2px solid rgba(255,231,154,.55); pointer-events: none; opacity: 0; }
 .gb { isolation: isolate; }
 @keyframes bounce { 50% { transform: translateY(-8px); } }
 
@@ -154,15 +150,13 @@ body:has(dialog[open]) { overflow: hidden; }
 .orn .ball { transition: transform .25s var(--ease-out); }
 .icon-btn, .btn, .tb-btn, .orn { -webkit-tap-highlight-color: transparent; }
 @media (hover: hover) {
-  .tb-btn:not([disabled]):hover { filter: brightness(1.08); border-color: rgba(233,196,90,.55); } /* subida é GSAP (hoverLift) */
+  .tb-btn:not([disabled]):hover { filter: brightness(1.08); border-color: rgba(233,196,90,.55); }
   .icon-btn:hover { border-color: var(--gold); } .orn:hover .ball { transform: scale(1.07); }
 }
 .scroll-hint { bottom: auto; top: calc(max(12px, env(safe-area-inset-top)) + 64px); }
 .hint:not([hidden]) ~ .scroll-hint { display: none; }
 .scroll-hint { padding: 4px 12px; border-radius: 999px; background: transparent; animation: bob 2s ease-in-out infinite; }
-/* o GSAP conduz os transforms de .btn/.fab: o CSS não disputa a mesma propriedade */
-html.motion-on .tb-btn { transition: box-shadow var(--t-m), filter var(--t-m), border-color var(--t-m), opacity var(--t-m); }
-html.motion-on .tb-btn:hover { transform: none; }
+.tb-btn:active, .icon-btn:active { transform: scale(.97); }
 
 /* ------------------------- cenário vivo (Etapa 6) --------------------------
    Pisca-pisca, estrelas, lua, casinha e presentes: animações 100% CSS de

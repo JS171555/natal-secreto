@@ -1,16 +1,15 @@
-import gsap from 'gsap';
 import { processPhoto } from '../utils/image.js';
 import { confirmParticipation, photoUrl } from '../services/participants.js';
 import { friendlyError } from '../services/auth.js';
 import { esc } from '../pages/home.js';
-import { EASE, T, reduced, reveal, pop, burst } from '../utils/motion.js';
+import { T, reduced, reveal, pop } from '../utils/motion.js';
 import { lazyLoading, LOAD } from './ui-loading.js';
 
 const nativeClose = HTMLDialogElement.prototype.close;
 
 /**
- * Modal padrão do sistema: fundo que escurece com CSS e painel que entra e sai
- * conduzido pelo GSAP. `d.close()` pode receber um callback para depois da saída
+ * Modal padrão do sistema: o fundo escurece com CSS. `d.close()` pode receber
+ * um callback para executar depois do fechamento
  * (é o que evita dois modais empilhados ao encadear janelas).
  * `d.blocked = true` segura o ESC enquanto um envio estiver em andamento.
  */
@@ -23,17 +22,15 @@ export function dialog(html) {
 
   d.close = (onDone) => {
     if (d.closing) { onDone?.(); return; }
-    d.closing = true; d.classList.add('closing');
-    const fin = () => { d.closing = false; nativeClose.call(d); onDone?.(); };
-    if (reduced()) return fin();
-    gsap.to(d, { opacity: 0, y: 10, scale: 0.97, duration: T.s, ease: EASE.in, overwrite: 'auto', onComplete: fin });
+    d.closing = true;
+    nativeClose.call(d);
+    d.closing = false;
+    onDone?.();
   };
 
   d.showModal();
-  if (!reduced()) {
-    gsap.from(d, { opacity: 0, y: 18, scale: 0.96, duration: T.l, ease: EASE.spring, clearProps: 'transform,opacity' });
-    reveal(d.querySelector('.sheet') ? [...d.querySelector('.sheet').children].filter((el) => !el.hidden) : d, { y: 12, each: 0.05, delay: 0.08 });
-  }
+  const sheet = d.querySelector('.sheet');
+  if (sheet && !reduced()) reveal([...sheet.children].filter((el) => !el.hidden), { y: 12, each: 0.05, delay: 0.04 });
   return d;
 }
 
@@ -74,8 +71,6 @@ export function openParticipate({ userId, name, onDone }) {
     const done = lazyLoading(LOAD.hang, { in: sheet }, 140);
     try {
       await confirmParticipation(userId, blob);
-      burst($('.pvwrap'), { count: 18, min: 40, max: 130 }); // comemora antes de fechar
-      await new Promise((r) => setTimeout(r, reduced() ? 0 : 420));
       done(); d.close(onDone);
     } catch (e) {
       done();

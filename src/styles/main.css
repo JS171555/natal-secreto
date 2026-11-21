@@ -33,7 +33,7 @@ h1 { font-family: var(--font-title); font-weight: 800; font-size: 2rem; line-hei
 
 form { display: grid; gap: 14px; text-align: left; }
 .field { display: grid; gap: 6px; font-weight: 600; font-size: .9rem; color: var(--ice); }
-.field > span { transition: color var(--t-m) var(--ease-out); will-change: transform; }
+.field > span { transition: color var(--t-m) var(--ease-out); }
 .field.is-focus > span { color: var(--gold-glow); }
 .field input { font: inherit; font-size: 1rem; color: var(--snow); background: rgba(5,11,32,.7); border: 1px solid rgba(221,235,255,.22);
   border-radius: 14px; padding: 13px 14px; min-height: 48px; outline: none; transition: border-color var(--t-m), box-shadow var(--t-m); }
@@ -44,7 +44,7 @@ form { display: grid; gap: 14px; text-align: left; }
 .check input { width: 20px; height: 20px; accent-color: var(--gold); margin-top: 1px; }
 
 .btn { position: relative; isolation: isolate; overflow: hidden; font: inherit; font-weight: 700; font-size: 1rem; width: 100%; min-height: 48px; border-radius: 999px; border: 1px solid transparent; cursor: pointer;
-  transition: box-shadow var(--t-m), border-color var(--t-m), background-color var(--t-m), color var(--t-m), filter var(--t-m), opacity var(--t-m); }
+  transition: transform var(--t-xs) var(--ease-out), box-shadow var(--t-m), border-color var(--t-m), background-color var(--t-m), color var(--t-m), filter var(--t-m), opacity var(--t-m); }
 .btn:focus-visible, .links a:focus-visible { outline: 3px solid var(--gold-glow); outline-offset: 2px; }
 .btn:active { transform: scale(.97); }
 .btn:disabled { opacity: .6; cursor: progress; }
@@ -86,20 +86,24 @@ form { display: grid; gap: 14px; text-align: left; }
 /* floco estático de cabeçalho (avisos): mesma linguagem do carregamento, sem girar */
 .flake-mark { display: grid; place-items: center; margin: 0 auto 4px; color: var(--gold); }
 .flake-mark .flake { width: 2.6rem; height: 2.6rem; }
-/* sem GSAP (ou antes do bundle) o floco gira por CSS; com GSAP no comando, .motion-on dá passagem */
-html:not(.motion-on) .flake { animation: spin var(--spin) linear infinite; }
+/* O indicador gira por CSS, sem ticker JavaScript. */
+.flake { animation: spin var(--spin) linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .load.is-still .flake { animation: none; }
 .load.is-still .load-text { animation: blink 1.6s ease-in-out infinite; }
 @keyframes blink { 50% { opacity: .5; } }
 
-/* ------------------------- microinterações e partículas -------------------- */
-.fx-ripple { position: absolute; z-index: -1; border-radius: 50%; pointer-events: none; will-change: transform, opacity;
-  background: radial-gradient(circle, rgba(255,231,154,.55), rgba(255,231,154,.06) 62%, transparent 70%); }
-.fx-part { position: absolute; left: 50%; top: 42%; width: var(--sz); height: var(--sz); margin: calc(var(--sz) / -2) 0 0 calc(var(--sz) / -2);
-  border-radius: 50%; pointer-events: none; box-shadow: 0 0 8px currentColor; }
-/* quem conduz estes transforms é o GSAP: o CSS sai do caminho para não disputar o mesmo frame */
-html.motion-on .btn:active, html.motion-on .tb-btn:active, html.motion-on .icon-btn:active { transform: none; }
+/* Microanimações CSS curtas: sem partículas, listeners globais ou ticker JS. */
+.motion-reveal { animation: motion-reveal var(--motion-duration, .34s) var(--ease-out) var(--motion-delay, 0s) both; }
+@keyframes motion-reveal { from { opacity: 0; transform: translate3d(var(--motion-x, 0px), var(--motion-y, 12px), 0) scale(var(--motion-scale, 1)); } }
+.motion-hang { animation: motion-hang var(--motion-duration, .55s) var(--ease-spring) var(--motion-delay, 0s) both; }
+@keyframes motion-hang { from { opacity: 0; transform: translate3d(0, var(--motion-y, -54px), 0) scale(var(--motion-scale, .78)); } }
+.motion-pop { animation: motion-pop var(--motion-duration, .34s) var(--ease-spring) both; transform-origin: center; }
+@keyframes motion-pop { from { transform: scale(var(--motion-scale, 1.07)); } 72% { transform: scale(.98); } to { transform: scale(1); } }
+.motion-shake { animation: motion-shake var(--motion-duration, .42s) ease-in-out both; }
+@keyframes motion-shake { 20% { transform: translateX(var(--motion-negative-x, -7px)); } 40% { transform: translateX(var(--motion-x, 7px)); } 60% { transform: translateX(var(--motion-negative-x, -7px)); } 80% { transform: translateX(var(--motion-x, 7px)); } }
+.motion-pulse { animation: motion-pulse 1.5s ease-in-out infinite; }
+@keyframes motion-pulse { 50% { transform: scale(1.12); } }
 
 @media (hover: hover) { .btn.gold:hover { filter: brightness(1.06); } .btn.ghost:hover { border-color: rgba(233,196,90,.6); } }
 @media (prefers-reduced-motion: reduce) {

@@ -8,7 +8,7 @@ import { renderProfileSetup } from './pages/profile-setup.js';
 import { renderNotice } from './pages/home.js';
 import { flags } from './services/auth.js';
 import { mountTree } from './pages/tree.js';
-import { initInteractions, swap } from './utils/motion.js';
+import { swap } from './utils/motion.js';
 import { LOAD, hideLoading, showLoading } from './components/ui-loading.js';
 
 const app = document.getElementById('app');
@@ -29,10 +29,7 @@ window.addEventListener('keydown', (event) => {
   if (['+', '=', '-', '_', '0'].includes(event.key) || ['NumpadAdd', 'NumpadSubtract', 'Numpad0'].includes(event.code)) event.preventDefault();
 }, true);
 
-initInteractions(); // microinterações delegadas: um único conjunto de listeners para o app todo
-
-// O splash do HTML existe antes do bundle; ao chamar showLoading() agora, o GSAP
-// assume o floco imediatamente — inclusive enquanto o Supabase responde ao auth.
+// O splash do HTML existe antes do bundle; o indicador CSS continua ativo enquanto o Supabase responde ao auth.
 showLoading(LOAD.tree);
 // O onAuthStateChange do Supabase pode não chegar nunca (sem rede, projeto fora do ar).
 // Nesse caso o splash do HTML viraria tela presa: depois de 20s ele sai de cena e

@@ -8,9 +8,8 @@ import { openParticipate, openCard } from '../components/participation.js';
 import { openDrawInfo, openConfirmDraw, openReveal } from '../components/draw-ui.js';
 import { fetchDrawState, fetchDrawStatus, revealMyResult, runDraw, subscribeDraw } from '../services/draw.js';
 import { esc } from './home.js';
-import { reduced, reveal, hang, burst, pop, pulse, T, EASE } from '../utils/motion.js';
+import { reduced, reveal, hang, pop, pulse, T } from '../utils/motion.js';
 import { LOAD, mark, showLoading, hideLoading, setBusy, lazyLoading, spinMark } from '../components/ui-loading.js';
-import gsap from 'gsap';
 
 export function mountTree(root, { user, name, admin }) {
   root.innerHTML = `<div class="tree-page">
@@ -31,7 +30,7 @@ export function mountTree(root, { user, name, admin }) {
   const $ = (s) => root.querySelector(s), scene = $('.scene'), el = document.documentElement;
   const viewportHeight = () => Math.round(window.visualViewport?.height || innerHeight);
   let list = [], adminId = null, lastW = 0, lastH = 0, timer = 0, seen = new Set(), unsub = null, unsubDraw = null;
-  let dstate = { done: false, drawnAt: null, mine: null }, stopRing = () => {}, stopNet = () => {};
+  let dstate = { done: false, drawnAt: null, mine: null }, stopGiftPulse = () => {}, stopNet = () => {};
   const stopSnow = startSnow($('.snow'));
   const net = $('.banner.net');
 
@@ -39,20 +38,6 @@ export function mountTree(root, { user, name, admin }) {
   scene.addEventListener('error', (e) => { if (e.target.tagName === 'IMG') e.target.remove(); }, true); // sem foto: fica a inicial
 
   /* -------------------------- desenho e movimento -------------------------- */
-
-  // entrada da cena: camadas do SVG em sequência + bolas caindo dos galhos
-  const intro = () => {
-    if (reduced()) return;
-    const layers = scene.querySelectorAll('.lyr');
-    const balls = scene.querySelectorAll('.orn-in');
-    if (!layers.length || !balls.length) return;
-    const glowLayer = scene.querySelector('.lyr[data-lyr="glow"]');
-    const tl = gsap.timeline();
-    tl.from(layers, { opacity: 0, duration: T.l, ease: EASE.soft, stagger: { amount: 0.5 } })
-      .from(glowLayer, { scale: 0.55, transformOrigin: '50% 50%', duration: T.xl, ease: EASE.out, clearProps: 'transform' }, '-=0.3');
-    const many = balls.length > 60; // muita bola: entrada sóbria, sem mola por item
-    (many ? reveal([...balls], { y: 26, amount: 0.45, duration: T.l }) : hang(balls, { amount: Math.min(0.85, 0.1 + balls.length * 0.02), distance: -54 }));
-  };
 
   const draw = (isFirst) => {
     const W = el.clientWidth, H = viewportHeight(), fromBottom = el.scrollHeight - scrollY, L = computeLayout(list, W, H);
@@ -64,17 +49,14 @@ export function mountTree(root, { user, name, admin }) {
     $('.hint').hidden = list.length > 0;
     updateJoin();
     scrollTo(0, isFirst ? 1e9 : el.scrollHeight - fromBottom); // começa embaixo, no tronco
-    if (isFirst) intro();
-    else if (fresh.size) settle(fresh);
+    if (!isFirst && fresh.size) settle(fresh);
   };
 
-  // bolas recém-confirmadas: caem, brilham e soltam faíscas
+  // bolas recém-confirmadas: entram com um movimento breve em CSS
   const settle = (fresh) => {
     const freshInns = [...fresh].map((id) => scene.querySelector(`[data-uid="${id}"] .orn-in`)).filter(Boolean);
     if (!freshInns.length) return;
     hang(freshInns, { distance: -46, each: 0.14 });
-    const last = scene.querySelector(`[data-uid="${[...fresh].pop()}"]`);
-    if (last) setTimeout(() => burst(last.querySelector('.ball') || last, { count: 12, min: 26, max: 78, size: 6 }), reduced() ? 0 : 620);
   };
 
   const onResize = () => {
@@ -111,7 +93,7 @@ export function mountTree(root, { user, name, admin }) {
   const showMine = () => {
     const o = scene.querySelector(`[data-uid="${user.id}"]`); if (!o) return;
     o.scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'center' });
-    setTimeout(() => { pop(o.querySelector('.orn-in'), { scale: 1.1 }); burst(o.querySelector('.ball'), { count: 14, min: 30, max: 92, size: 6 }); }, reduced() ? 0 : 520);
+    setTimeout(() => pop(o.querySelector('.orn-in'), { scale: 1.1 }), reduced() ? 0 : 520);
   };
   const joinNow = async () => { const stop = lazyLoading(LOAD.tree, {}, 350); await refresh(); stop(); showMine(); };
   join.onclick = () => openParticipate({ userId: user.id, name, onDone: joinNow });
@@ -128,12 +110,11 @@ export function mountTree(root, { user, name, admin }) {
   const updateDraw = () => {
     gift.hidden = !(dstate.done && dstate.mine && !dstate.mine.revealed_at);
     doDraw.hidden = !(admin && !dstate.done); updateJoin();
-    if (!gift.hidden && !giftShown) { // a caixa chega quicando e com anel de chamada
-      giftShown = true; stopRing();
+    if (!gift.hidden && !giftShown) { // o ícone pulsa enquanto a caixa aguarda abertura
+      giftShown = true; stopGiftPulse();
       if (!reduced()) {
-        gsap.fromTo(gift, { opacity: 0, scale: 0.5, y: 26 }, { opacity: 1, scale: 1, y: 0, duration: T.xl, ease: EASE.spring, clearProps: 'transform' });
-        reveal(gift.querySelector('span'), { y: 8, delay: 0.25 });
-        stopRing = pulse(gift.querySelector('i'), { scale: 1.14, duration: 1.5 }); // o ícone respira enquanto não abrir
+        reveal(gift, { y: 14, duration: T.l });
+        stopGiftPulse = pulse(gift.querySelector('i'));
       }
     } else if (gift.hidden) giftShown = false;
   };
@@ -186,6 +167,6 @@ export function mountTree(root, { user, name, admin }) {
   });
   return {
     update(next) { list = next; draw(false); },
-    destroy() { stopSnow(); stopRing(); stopNet(); unsub?.(); unsubDraw?.(); },
+    destroy() { stopSnow(); stopGiftPulse(); stopNet(); unsub?.(); unsubDraw?.(); },
   };
 }

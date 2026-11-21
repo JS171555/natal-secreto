@@ -24,8 +24,7 @@
     #boot .flake circle { fill: currentColor; stroke: none; }
     #boot[hidden] { display: none; }
     @keyframes bootspin { to { transform: rotate(360deg); } }
-    /* quando o GSAP assume a rotação, o keyframe dá passagem (senão giraria em dobro) */
-    html.motion-on #boot .flake { animation: none; }
+    /* O indicador inicial usa somente CSS, inclusive antes do JavaScript. */
     @media (prefers-reduced-motion: reduce) {
       /* sem rotação nem aqui: o indicador de atividade vira o pulso de opacidade do texto,
          o mesmo padrão do sistema inteiro (ui-loading.js / main.css) */
