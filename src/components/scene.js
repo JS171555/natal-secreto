@@ -148,7 +148,7 @@ export function buildScene(L) {
   const gy = H - 114, gs = Math.max(26, Math.min(52, S * 0.55));
   const box = (bx, by, bw, bh, body, ribbon) => { const x = +bx, y = +by, w = +bw, h = +bh; return `<g><rect x="${x}" y="${y - h}" width="${w}" height="${h}" rx="2" fill="${body}"/>`
     + `<rect x="${x + w * 0.42}" y="${y - h}" width="${w * 0.16}" height="${h}" fill="${ribbon}"/>`
-    + `<rect x="${x}" y="${y - h * 0.72}" width="${w}" height="${h * 0.12}" fill="${ribbon}"/>`
+    + `<rect x="${x}" y="${y - h * 0.72}" width="${w}" height="${h * 0.07}" fill="${ribbon}"/>`
     + `<path d="M${x + w * 0.5} ${y - h}q-${w * 0.22} -${h * 0.22} -${w * 0.05} -${h * 0.1} M${x + w * 0.5} ${y - h}q${w * 0.22} -${h * 0.22} ${w * 0.05} -${h * 0.1}" fill="none" stroke="${ribbon}" stroke-width="2"/>`
     + `<rect class="sheen" x="${x}" y="${y - h}" width="${(w * 0.4).toFixed(1)}" height="${h}" fill="url(#shine)"/></g>`; };
   const gifts = `<g class="gifts">`
