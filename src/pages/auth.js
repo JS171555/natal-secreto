@@ -26,7 +26,10 @@ const showError = (msg, text, at) => {
   if (at) shake(at, { dist: 5 }); else shake(msg, { dist: 5 });
 };
 
-// Nenhum campo obrigatório em branco não deveria virar ida ao servidor.
+// Campo obrigatório em branco não deveria virar ida ao servidor.
+// Devolve o .field do primeiro input vazio (para o shake apontar para ele)
+// ou `null` quando o formulário está pronto para enviar — nunca `true`,
+// senão o handler confunde "válido" com "inválido" e bloqueia o envio.
 const precheck = (form) => {
   let bad = null;
   form.querySelectorAll('input[required]').forEach((i) => {
@@ -34,7 +37,7 @@ const precheck = (form) => {
     wrap.classList.toggle('is-bad', empty);
     if (empty && !bad) bad = i;
   });
-  if (!bad) return true;
+  if (!bad) return null;
   bad.focus({ preventScroll: true });
   return bad.closest('.field');
 };
