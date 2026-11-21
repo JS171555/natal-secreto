@@ -18,14 +18,16 @@ function tier(cx, yb, w, h) {
 }
 function snowCap(cx, yb, w, h, coverage, layer) {
   const edge = yb - h * (1 - coverage), { L, Rr } = botGeo(cx, edge, w);
-  const count = Math.max(2, Math.min(7, Math.round(w / 155))), wave = rng(7919 + layer * 104729);
+  const count = Math.max(3, Math.min(10, Math.round(w / 110))), wave = rng(7919 + layer * 104729);
   const weights = Array.from({ length: count }, () => .65 + wave() * .7), total = weights.reduce((a, b) => a + b, 0);
-  let p = `M${L} ${yb - h}H${Rr}V${edge}`, x = Rr;
+  const amplitude = h * (.025 + wave() * .045);
+  let p = `M${L} ${yb - h}H${Rr}V${edge}`, x = Rr, y = edge;
   for (let i = 0; i < count; i++) {
     const span = i === count - 1 ? x - L : w * weights[i] / total, x1 = i === count - 1 ? L : x - span;
-    const amp = h * (.045 + wave() * .075), dir = wave() > .48 ? 1 : -1;
-    p += `C${x - span * .3} ${edge + dir * amp} ${x1 + span * .3} ${edge + dir * amp} ${x1} ${edge}`;
-    x = x1;
+    const y1 = i === count - 1 ? edge : edge + (wave() * 2 - 1) * amplitude;
+    // Controles na altura das extremidades deixam cada curva suave, sem vértices ou pontas.
+    p += `C${x - span / 3} ${y} ${x1 + span / 3} ${y1} ${x1} ${y1}`;
+    x = x1; y = y1;
   }
   return p + 'Z';
 }
