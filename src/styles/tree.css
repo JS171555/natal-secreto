@@ -31,7 +31,7 @@ body:has(.tree-page) { background: #031A14; }
 
 .orn.admin .ball { box-shadow: inset 0 0 0 3px var(--gold-glow), inset 0 0 18px 6px rgba(233,196,90,.55), 0 0 26px 6px rgba(255,231,154,.45), 0 6px 18px rgba(0,0,0,.5); }
 .orn.admin .ball::after { background: radial-gradient(circle at 30% 25%, rgba(255,231,154,.5), transparent 45%), linear-gradient(135deg, rgba(233,196,90,.3), rgba(233,196,90,0) 60%), radial-gradient(circle, transparent 60%, rgba(255,231,154,.4) 100%); }
-.orn.admin .nm { color: var(--gold-glow); letter-spacing: .14em; font-weight: 800; }
+.orn.admin .nm { max-width: min(80vw, calc(var(--s) * 1.8)); color: var(--gold-glow); letter-spacing: .08em; font-weight: 800; }
 .crown { position: absolute; left: 50%; top: calc(var(--cord) - var(--s) * .34); z-index: 3; transform: translateX(-50%); font-size: calc(var(--s) * .36); color: var(--gold); filter: drop-shadow(0 0 6px var(--gold-glow)); }
 
 .topbar { position: fixed; z-index: 6; top: max(12px, env(safe-area-inset-top)); left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px; pointer-events: none; }
