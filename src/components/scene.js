@@ -16,8 +16,8 @@ function tier(cx, yb, w, h) {
   for (let i = n; i > 0; i--) { const x1 = L + (i - 1) * sw, x0 = L + i * sw; p += `Q${(x0 + x1) / 2} ${yb + d * 2} ${x1} ${yb}`; }
   return p + `Q${cx - w * 0.2} ${yb - h * 0.45} ${cx} ${yb - h}Z`;
 }
-function snowCap(cx, yb, w, h) {
-  const edge = yb - h * 0.4, { n, sw, d, L, Rr } = botGeo(cx, edge, w);
+function snowCap(cx, yb, w, h, coverage) {
+  const edge = yb - h * (1 - coverage), { n, sw, d, L, Rr } = botGeo(cx, edge, w);
   let p = `M${L} ${yb - h}H${Rr}V${edge}`;
   for (let i = n; i > 0; i--) {
     const x1 = L + (i - 1) * sw, x0 = L + i * sw;
@@ -113,7 +113,7 @@ export function buildScene(L) {
     + `<rect x="24" y="-8" width="5" height="10" rx="1" fill="#152f20"/>`
     + `<circle class="smoke s1" cx="2.5" cy="-27" r="2" fill="#dfe8f7"/><circle class="smoke s2" cx="2.5" cy="-27" r="2.6" fill="#dfe8f7"/><circle class="smoke s3" cx="2.5" cy="-27" r="3.2" fill="#dfe8f7"/></g>`;
 
-  // Árvore principal: cobertura ampliada de neve na parte superior de cada camada, recortada pelo formato do galho.
+  // A neve aumenta de cobertura dos galhos finos no topo para os galhos largos junto ao tronco.
   const total = R + crown, crownW = [0.72, 0.48, 0.26];
   let tiers = '', wires = '', bulbs = '';
   for (let r = 0; r < total; r++) {
@@ -122,7 +122,8 @@ export function buildScene(L) {
     defs.push(`<linearGradient id="t${r}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${mix(c, '#9ecb6a', 0.18)}"/><stop offset="1" stop-color="${mix(c, '#031A14', 0.35)}"/></linearGradient>`);
     tiers += `<path d="${d}" fill="url(#t${r})" stroke="${mix(c, '#7fd39a', 0.4)}" stroke-opacity=".45" stroke-width="1.5"/><path d="${d}" fill="url(#gr)"/>`;
     defs.push(`<clipPath id="leaf${r}" clipPathUnits="userSpaceOnUse"><path d="${d}"/></clipPath>`);
-    tiers += `<path class="snow-cap" d="${snowCap(cx, yb(r), w, P * 1.55)}" fill="url(#branchSnow)" opacity=".78" clip-path="url(#leaf${r})"/>`;
+    const coverage = .24 + .36 * (1 - t);
+    tiers += `<path class="snow-cap" d="${snowCap(cx, yb(r), w, P * 1.55, coverage)}" fill="url(#branchSnow)" opacity=".58" clip-path="url(#leaf${r})"/>`;
     if (r % 2 === 0 && w > 120) { const st = lightStrand(cx, yb(r), w, r); wires += `<path d="${st.wire}" fill="none" stroke="#E9C45A" stroke-opacity=".3" stroke-width="1.2"/>`; bulbs += st.bulbs; }
   }
   const apex = yb(total - 1) - P * 1.3, sy = apex - star * 0.3, tw = Wmax * 0.13, ty = yb(0) - 40;
