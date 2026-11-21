@@ -154,3 +154,32 @@ body:has(dialog[open]) { overflow: hidden; }
 /* o GSAP conduz os transforms de .btn/.fab: o CSS não disputa a mesma propriedade */
 html.motion-on .tb-btn { transition: box-shadow var(--t-m), filter var(--t-m), border-color var(--t-m), opacity var(--t-m); }
 html.motion-on .tb-btn:hover { transform: none; }
+
+/* ------------------------- cenário vivo (Etapa 6) --------------------------
+   Pisca-pisca, estrelas, lua, casinha e presentes: animações 100% CSS de
+   opacidade/transform sobre nós SVG estáticos — o corte global de
+   prefers-reduced-motion (main.css) já deixa tudo no estado final aceso. */
+.bulb { animation: blink 3.6s ease-in-out var(--b, 0s) infinite; }
+.bulb.b2 { animation-duration: 4.8s; }
+.bulb.b3 { animation-duration: 5.6s; animation-delay: calc(var(--b, 0s) - 1.4s); }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: .28; } }
+.tw { transform-box: fill-box; transform-origin: center; animation: twk 3.8s ease-in-out var(--d, 0s) infinite; }
+@keyframes twk { 0%, 100% { opacity: .95; transform: scale(1); } 50% { opacity: .22; transform: scale(.68); } }
+.moon-h { transform-box: fill-box; transform-origin: center; animation: moong 7s ease-in-out infinite; }
+@keyframes moong { 50% { opacity: .72; transform: scale(.93); } }
+.meteor { opacity: 0; animation: shoot 13s ease-in var(--md, 8s) infinite; }
+@keyframes shoot { 0% { transform: translate(0, 0); opacity: 0; } 2% { opacity: .95; } 10% { transform: translate(-680px, 340px); opacity: 0; } 100% { transform: translate(-680px, 340px); opacity: 0; } }
+.cabin .win { animation: fire 2.6s ease-in-out infinite; }
+@keyframes fire { 0%, 100% { opacity: 1; } 42% { opacity: .74; } 68% { opacity: .93; } }
+.cabin .smoke { transform-box: fill-box; transform-origin: center; opacity: 0; animation: puff 5.2s linear infinite; }
+.cabin .s2 { animation-delay: -1.8s; } .cabin .s3 { animation-delay: -3.6s; }
+@keyframes puff { 0% { opacity: 0; transform: translate(0, 0) scale(.5); } 15% { opacity: .38; } 100% { opacity: 0; transform: translate(-10px, -44px) scale(1.7); } }
+.cone { animation: breathe 6.5s ease-in-out infinite; }
+@keyframes breathe { 50% { opacity: .78; } }
+.gifts .sheen { transform-box: fill-box; opacity: 0; animation: swipe 5.5s ease-in-out infinite; }
+.gifts > g:nth-child(2) .sheen { animation-delay: -2.4s; }
+.gifts > g:nth-child(3) .sheen { animation-delay: -4.1s; }
+@keyframes swipe { 0% { opacity: 0; transform: translateX(-16px); } 22% { opacity: .32; } 45% { opacity: 0; transform: translateX(42px); } 100% { opacity: 0; transform: translateX(42px); } }
+@media (prefers-reduced-motion: reduce) { /* no corte global, meteor/fumaça/brilho terminam apagados; o resto termina aceso */
+  .scene svg { content-visibility: auto; }
+}

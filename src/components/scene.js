@@ -3,9 +3,15 @@ import { rng } from '../utils/rand.js';
 const lerp = (a, b, t) => a + (b - a) * t;
 const mix = (c1, c2, t) => '#' + [0, 1, 2].map((i) => Math.round(lerp(parseInt(c1.slice(1 + 2 * i, 3 + 2 * i), 16), parseInt(c2.slice(1 + 2 * i, 3 + 2 * i), 16), t)).toString(16).padStart(2, '0')).join('');
 
+// Geometria da borda inferior de um galho (a mesma para o traçado e para o pisca-pisca).
+function botGeo(cx, yb, w) {
+  const n = Math.max(3, Math.round(w / 44)), sw = w / n, d = sw * 0.3, L = cx - w / 2, Rr = cx + w / 2;
+  return { n, sw, d, L, Rr };
+}
+
 // Galho em camada: triângulo com a borda inferior em "babados" (visual ilustrado).
 function tier(cx, yb, w, h) {
-  const n = Math.max(3, Math.round(w / 44)), sw = w / n, d = sw * 0.3, L = cx - w / 2, Rr = cx + w / 2;
+  const { n, sw, d, L, Rr } = botGeo(cx, yb, w);
   let p = `M${cx} ${yb - h}Q${cx + w * 0.2} ${yb - h * 0.45} ${Rr} ${yb}`;
   for (let i = n; i > 0; i--) { const x1 = L + (i - 1) * sw, x0 = L + i * sw; p += `Q${(x0 + x1) / 2} ${yb + d * 2} ${x1} ${yb}`; }
   return p + `Q${cx - w * 0.2} ${yb - h * 0.45} ${cx} ${yb - h}Z`;
@@ -16,14 +22,39 @@ function starPath(cx, cy, R) {
   return 'M' + pts.join('L') + 'Z';
 }
 
+// Pisca-pisca: fio dourado com babado + lâmpadas alternadas nos vales, em tons do projeto.
+const BULB = ['#FFE79A', '#FFB4A8', '#DDEBFF', '#E9C45A'];
+function lightStrand(cx, yb, w, r) {
+  const { n, sw, d, L } = botGeo(cx, yb, w);
+  let wire = `M${L.toFixed(1)} ${yb.toFixed(1)}`;
+  for (let i = 0; i < n; i++) wire += `Q${(L + (i + 0.5) * sw).toFixed(1)} ${(yb + d * 2).toFixed(1)} ${(L + (i + 1) * sw).toFixed(1)} ${yb.toFixed(1)}`;
+  const step = Math.max(1, Math.ceil(n / 8)); // no máximo 8 lâmpadas por fio
+  let bulbs = '';
+  for (let i = 0; i < n; i += step) {
+    const x = L + (i + 0.5) * sw, y = yb + d, ci = (i + r) % BULB.length, br = w < 260 ? 2.2 : w < 460 ? 2.7 : 3.1;
+    const delay = (-(i * 0.73 + r * 1.37) % 5).toFixed(2);
+    bulbs += `<g class="bulb b${(i % 3) + 1}" style="--b:${delay}s">`
+      + `<line x1="${x.toFixed(1)}" y1="${y.toFixed(1)}" x2="${x.toFixed(1)}" y2="${(y + 3).toFixed(1)}" stroke="#caa23f" stroke-opacity=".7" stroke-width=".9"/>`
+      + `<circle cx="${x.toFixed(1)}" cy="${(y + 3 + br).toFixed(1)}" r="${(br * 3.4).toFixed(1)}" fill="url(#h${ci})"/>`
+      + `<rect x="${(x - 1).toFixed(1)}" y="${(y + 2).toFixed(1)}" width="2" height="1.8" rx=".5" fill="#8a7440"/>`
+      + `<circle cx="${x.toFixed(1)}" cy="${(y + 3.4 + br).toFixed(1)}" r="${br}" fill="${BULB[ci]}" opacity=".95"/></g>`;
+  }
+  return { wire, bulbs };
+}
+
 export function buildScene(L) {
-  const { W, H, P, Wmax, cx, R, crown, B, star, taper, yb } = L, rnd = rng(7);
+  const { W, H, P, Wmax, cx, R, crown, B, S, star, taper, yb } = L, rnd = rng(7);
   const defs = [`<linearGradient id="trunk" x1="0" x2="1"><stop offset="0" stop-color="#1f120a"/><stop offset=".5" stop-color="#4a2e18"/><stop offset="1" stop-color="#1a0f08"/></linearGradient>
     <linearGradient id="snow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a9bfe6"/><stop offset="1" stop-color="#4d6694"/></linearGradient>
     <radialGradient id="glow"><stop offset="0" stop-color="#FFE79A" stop-opacity=".55"/><stop offset="1" stop-color="#FFE79A" stop-opacity="0"/></radialGradient>
-    <pattern id="gr" width="90" height="90" patternUnits="userSpaceOnUse">${Array.from({ length: 60 }, () => `<circle cx="${(rnd() * 90).toFixed(1)}" cy="${(rnd() * 90).toFixed(1)}" r="${(0.5 + rnd() * 0.9).toFixed(1)}" fill="#cdeaa8" opacity="${(0.12 + rnd() * 0.25).toFixed(2)}"/>`).join('')}</pattern>`];
+    <radialGradient id="hMoon"><stop offset="0" stop-color="#EAF0FF" stop-opacity=".5"/><stop offset=".55" stop-color="#EAF0FF" stop-opacity=".12"/><stop offset="1" stop-color="#EAF0FF" stop-opacity="0"/></radialGradient>
+    <radialGradient id="hWarm"><stop offset="0" stop-color="#FFE79A" stop-opacity=".34"/><stop offset="1" stop-color="#FFE79A" stop-opacity="0"/></radialGradient>
+    <linearGradient id="coneG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE79A" stop-opacity=".16"/><stop offset="1" stop-color="#FFE79A" stop-opacity="0"/></linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".5"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>`
+    + BULB.map((c, i) => `<radialGradient id="h${i}"><stop offset="0" stop-color="${c}" stop-opacity=".55"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></radialGradient>`).join('')
+    + `<pattern id="gr" width="90" height="90" patternUnits="userSpaceOnUse">${Array.from({ length: 60 }, () => `<circle cx="${(rnd() * 90).toFixed(1)}" cy="${(rnd() * 90).toFixed(1)}" r="${(0.5 + rnd() * 0.9).toFixed(1)}" fill="#cdeaa8" opacity="${(0.12 + rnd() * 0.25).toFixed(2)}"/>`).join('')}</pattern>`];
 
-  // Céu: pontos luminosos e estrelinhas penduradas por fios.
+  // Céu: pontos luminosos, estrelinhas penduradas por fios, estrelas que piscam, lua e estrela cadente.
   let sky = '';
   for (let i = 0, n = Math.round(H / 80); i < n; i++) {
     const big = rnd() > 0.88;
@@ -33,8 +64,19 @@ export function buildScene(L) {
     const x = rnd() * W, len = 40 + rnd() * 300, s = 5 + rnd() * 5;
     sky += `<line x1="${x.toFixed(0)}" y1="0" x2="${x.toFixed(0)}" y2="${len.toFixed(0)}" stroke="#3f6a3f" stroke-opacity=".5"/><path d="${starPath(x, len + s, s)}" fill="#8a9a45" opacity=".7"/>`;
   }
+  for (let i = 0; i < 9; i++) {
+    const x = rnd() * W, y = rnd() * H * 0.4;
+    sky += `<circle class="tw" style="--d:${(-rnd() * 4).toFixed(2)}s" cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${(1.3 + rnd() * 1.1).toFixed(1)}" fill="#F5F7FF" opacity=".9"/>`;
+  }
+  const mx = W * 0.84, my = H * 0.06 + 30, mr = Math.max(14, Math.min(26, W * 0.03));
+  sky += `<g class="moon"><circle class="moon-h" cx="${mx.toFixed(0)}" cy="${my.toFixed(0)}" r="${(mr * 3).toFixed(0)}" fill="url(#hMoon)"/>`
+    + `<circle cx="${mx.toFixed(0)}" cy="${my.toFixed(0)}" r="${mr.toFixed(1)}" fill="#E8EDFB" opacity=".92"/>`
+    + `<circle cx="${(mx - mr * 0.3).toFixed(1)}" cy="${(my - mr * 0.2).toFixed(1)}" r="${(mr * 0.16).toFixed(1)}" fill="#c9d4ee" opacity=".6"/>`
+    + `<circle cx="${(mx + mr * 0.25).toFixed(1)}" cy="${(my + mr * 0.3).toFixed(1)}" r="${(mr * 0.12).toFixed(1)}" fill="#c9d4ee" opacity=".5"/></g>`;
+  sky += `<g transform="translate(${(W * 0.66).toFixed(0)} ${(H * 0.05 + 40).toFixed(0)}) rotate(28)"><g class="meteor" style="--md:${(8 + rnd() * 6).toFixed(1)}s">`
+    + `<line x1="0" y1="0" x2="-54" y2="0" stroke="url(#shine)" stroke-width="1.6"/><circle r="1.8" fill="#F5F7FF"/></g></g>`;
 
-  // Floresta ao fundo, em três profundidades (a árvore principal a ultrapassa em altura).
+  // Floresta ao fundo, em três profundidades + casinha aconchegante com janela à lareira.
   const ground = H - 80; let forest = '';
   [['#0a1f3b', 0.55, 150, 1.0], ['#072a1e', 0.42, 190, 0.8], ['#0a3322', 0.3, 230, 0.62]].forEach(([c, hv, w, o], li) => {
     const col = mix(c, '#031A14', 0.1);
@@ -43,26 +85,58 @@ export function buildScene(L) {
       forest += `<path d="${pine(x, ground + 20 - li * 6, w * (0.8 + rnd() * 0.4), h)}" fill="${col}" opacity="${o}"/>`;
     }
   });
+  const cabX = W * (W < 640 ? 0.055 : 0.09), cabS = Math.max(1, Math.min(1.6, W / 850)), cabY = ground - 18;
+  forest += `<g class="cabin" transform="translate(${cabX.toFixed(0)} ${cabY.toFixed(0)}) scale(${cabS.toFixed(2)})">`
+    + `<ellipse cx="17" cy="2" rx="32" ry="6" fill="url(#hWarm)" opacity=".62"/><circle cx="14.5" cy="-6" r="19" fill="url(#hWarm)" opacity=".85"/>`
+    + `<rect x="-1" y="-20" width="7" height="9" fill="#3a5f47"/><rect x="0" y="-14" width="34" height="16" rx="1.5" fill="#2c5340"/>`
+    + `<path d="M-4 -14 L17 -26 L38 -14 Z" fill="#356149"/><path d="M-4 -14 L17 -26 L38 -14" fill="none" stroke="#dfe9fb" stroke-opacity=".75" stroke-width="2.6" stroke-linecap="round"/>`
+    + `<rect class="win" x="10" y="-10" width="9" height="8" rx="1" fill="#FFE79A"/><line x1="14.5" y1="-10" x2="14.5" y2="-2" stroke="#7a5c1e" stroke-width=".8"/>`
+    + `<rect x="24" y="-8" width="5" height="10" rx="1" fill="#152f20"/>`
+    + `<circle class="smoke s1" cx="2.5" cy="-27" r="2" fill="#dfe8f7"/><circle class="smoke s2" cx="2.5" cy="-27" r="2.6" fill="#dfe8f7"/><circle class="smoke s3" cx="2.5" cy="-27" r="3.2" fill="#dfe8f7"/></g>`;
 
-  // Árvore principal.
+  // Árvore principal: galhos, ombros nevados, fio de pisca-pisca e lâmpadas alternadas.
   const total = R + crown, crownW = [0.72, 0.48, 0.26];
-  let tiers = '';
+  let tiers = '', wires = '', bulbs = '';
   for (let r = 0; r < total; r++) {
     const w = r < R ? Wmax * taper(r) : Wmax * taper(R - 1) * crownW[r - R], t = r / (total - 1);
     const c = mix('#082a1a', '#2f7a4a', t * 0.9), d = tier(cx, yb(r), w, P * 1.55);
     defs.push(`<linearGradient id="t${r}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${mix(c, '#9ecb6a', 0.18)}"/><stop offset="1" stop-color="${mix(c, '#031A14', 0.35)}"/></linearGradient>`);
     tiers += `<path d="${d}" fill="url(#t${r})" stroke="${mix(c, '#7fd39a', 0.4)}" stroke-opacity=".45" stroke-width="1.5"/><path d="${d}" fill="url(#gr)"/>`;
+    const hh = P * 1.55; // neve acumulada nos ombros (laterais), onde o galho é visível
+    for (const sgn of [-1, 1]) {
+      const x0 = cx + sgn * w * 0.06, y0 = yb(r) - hh * 0.94, xm = cx + sgn * w * 0.22, ym = yb(r) - hh * 0.42, x1 = cx + sgn * (w / 2 - 2), y1 = yb(r) - 1;
+      tiers += `<path d="M${x0.toFixed(1)} ${y0.toFixed(1)}Q${xm.toFixed(1)} ${ym.toFixed(1)} ${x1.toFixed(1)} ${y1.toFixed(1)}" fill="none" stroke="#eef4ff" stroke-opacity=".34" stroke-width="${(2 + w * 0.004).toFixed(1)}" stroke-linecap="round"/>`;
+    }
+    if (r % 2 === 0 && w > 120) { const st = lightStrand(cx, yb(r), w, r); wires += `<path d="${st.wire}" fill="none" stroke="#E9C45A" stroke-opacity=".3" stroke-width="1.2"/>`; bulbs += st.bulbs; }
   }
   const apex = yb(total - 1) - P * 1.3, sy = apex - star * 0.3, tw = Wmax * 0.13, ty = yb(0) - 40;
   const trunk = `<path d="M${cx - tw / 2} ${ty}H${cx + tw / 2}L${cx + tw * 0.65} ${H - 68}H${cx - tw * 0.65}Z" fill="url(#trunk)"/>`;
-  const snow = `<path d="M0 ${H - 72}Q${W * 0.25} ${H - 112} ${W * 0.5} ${H - 84}T${W} ${H - 96}V${H}H0Z" fill="url(#snow)"/>`;
+  const snow = `<path d="M0 ${H - 72}Q${W * 0.22} ${H - 158} ${W * 0.5} ${H - 138}T${W} ${H - 92}V${H}H0Z" fill="url(#snow)"/>`;
+  const drifts = `<path d="M0 ${H - 58}Q${W * 0.32} ${H - 84} ${W * 0.55} ${H - 62}T${W} ${H - 70}V${H}H0Z" fill="#dfe9fb" opacity=".1"/><path d="M0 ${H - 40}Q${W * 0.4} ${H - 58} ${W * 0.7} ${H - 44}T${W} ${H - 50}V${H}H0Z" fill="#eef5ff" opacity=".08"/>`;
   const glow = `<circle cx="${cx}" cy="${sy}" r="${star * 5.5}" fill="url(#glow)"/>`;
+  const cone = `<path class="cone" d="M${cx} ${sy + star * 0.4}L${(cx - W * 0.17).toFixed(0)} ${H - 136}H${(cx + W * 0.17).toFixed(0)}Z" fill="url(#coneG)"/>`;
+  const amb = `<ellipse cx="${cx}" cy="${H - 116}" rx="${(Wmax * 0.6).toFixed(0)}" ry="${(P * 0.9).toFixed(0)}" fill="url(#hWarm)" opacity=".5"/>`;
   const sparks = Array.from({ length: 10 }, () => `<circle cx="${(cx + (rnd() - 0.5) * star * 3).toFixed(0)}" cy="${(sy + (rnd() - 0.5) * star * 3).toFixed(0)}" r="${(0.8 + rnd() * 1.4).toFixed(1)}" fill="#FFE79A" opacity=".8"/>`).join('');
   const starEl = `<g class="star-g"><path d="${starPath(cx, sy, star)}" fill="#FFE79A" stroke="#E9C45A" stroke-width="${(star * 0.28).toFixed(0)}" stroke-linejoin="round"/></g>${sparks}`;
+
+  // Presentes sob a árvore + brilhos na neve do chão.
+  const gy = H - 114, gs = Math.max(26, Math.min(52, S * 0.55));
+  const box = (bx, by, bw, bh, body, ribbon) => { const x = +bx, y = +by, w = +bw, h = +bh; return `<g><rect x="${x}" y="${y - h}" width="${w}" height="${h}" rx="2" fill="${body}"/>`
+    + `<rect x="${x + w * 0.42}" y="${y - h}" width="${w * 0.16}" height="${h}" fill="${ribbon}"/>`
+    + `<rect x="${x}" y="${y - h * 0.34}" width="${w}" height="${h * 0.16}" fill="${ribbon}"/>`
+    + `<path d="M${x + w * 0.5} ${y - h}q-${w * 0.22} -${h * 0.22} -${w * 0.05} -${h * 0.1} M${x + w * 0.5} ${y - h}q${w * 0.22} -${h * 0.22} ${w * 0.05} -${h * 0.1}" fill="none" stroke="${ribbon}" stroke-width="2"/>`
+    + `<rect class="sheen" x="${x}" y="${y - h}" width="${(w * 0.4).toFixed(1)}" height="${h}" fill="url(#shine)"/></g>`; };
+  const gifts = `<g class="gifts">`
+    + box(cx - gs * 2.7, gy + 2, gs, gs * 0.78, '#b3202f', '#E9C45A')
+    + box(cx + gs * 2.3, gy + 2, gs * 0.86, gs * 0.66, '#2d4f82', '#DDEBFF')
+    + box(cx + gs * 0.45, gy + 4, gs * 0.7, gs * 0.55, '#6b4a2b', '#FFB4A8')
+    + `</g>`;
+  let sparkle = '';
+  for (let i = 0; i < 16; i++) sparkle += `<circle class="tw" style="--d:${(-rnd() * 5).toFixed(2)}s" cx="${(rnd() * W).toFixed(0)}" cy="${(H - 136 + rnd() * 58).toFixed(0)}" r="${(0.9 + rnd() * 1).toFixed(1)}" fill="#F5F7FF" opacity=".7"/>`;
 
   // Cada grupo (g.lyr) é revelado em sequência pelo GSAP: céu → floresta → árvore → brilho → estrela → neve.
   return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true"><defs>${defs.join('')}</defs>`
     + `<g class="lyr" data-lyr="sky">${sky}</g><g class="lyr" data-lyr="forest">${forest}</g>`
-    + `<g class="lyr" data-lyr="tree">${trunk}${tiers}</g><g class="lyr" data-lyr="glow">${glow}</g>`
-    + `<g class="lyr" data-lyr="star">${starEl}</g><g class="lyr" data-lyr="ground">${snow}</g></svg>`;
+    + `<g class="lyr" data-lyr="tree">${trunk}${tiers}${wires}${bulbs}</g><g class="lyr" data-lyr="glow">${cone}${glow}</g>`
+    + `<g class="lyr" data-lyr="star">${starEl}</g><g class="lyr" data-lyr="ground">${snow}${drifts}${amb}${gifts}${sparkle}</g></svg>`;
 }
