@@ -52,7 +52,15 @@ body:has(.tree-page) { background: #031A14; }
 
 /* Etapa 3: botão flutuante, modais, entrada de novas bolas */
 .orn { cursor: pointer; } .orn:focus-visible { outline: 2px solid var(--gold-glow); outline-offset: 4px; border-radius: 12px; }
-.orn.enter .ball { animation: flash 1.8s ease-out; }
+/* Entrada com um leve pop e brilho; o enfeite pai continua no balanço suave já existente. */
+.orn.enter .ball { animation: ornament-arrive .85s var(--ease-spring), flash 1.8s ease-out; }
+@keyframes ornament-arrive { from { opacity: 0; transform: scale(.76); } 72% { opacity: 1; transform: scale(1.06); } to { opacity: 1; transform: scale(1); } }
+.orn.enter.admin .crown { animation: crown-arrive .72s var(--ease-spring) .12s; transform-origin: 50% 80%; }
+@keyframes crown-arrive {
+  from { opacity: 0; transform: translateX(-50%) translateY(5px) scale(.65) rotate(-12deg); }
+  72% { opacity: 1; transform: translateX(-50%) translateY(-1px) scale(1.08) rotate(3deg); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1) rotate(0); }
+}
 @keyframes flash { 30% { box-shadow: 0 0 40px 14px rgba(255,231,154,.9), inset 0 0 0 2px #fff; } }
 
 /* --------------------------------- BARRA ÚNICA ------------------------------
@@ -155,6 +163,7 @@ body:has(dialog[open]) { overflow: hidden; }
 /* Etapa 5: acabamento */
 @keyframes twinkle { 50% { transform: scale(1.08); } }
 .scene.many .orn { animation: none; }
+.scene.many .orn.enter .ball, .scene.many .orn.enter .crown { animation: none; }
 .ball::before { animation: shimmer 5s ease-in-out var(--d, 0s) infinite; }
 @keyframes shimmer { 50% { opacity: .55; transform: rotate(-28deg) translate(4%, 6%); } }
 .banner.net { top: calc(max(12px, env(safe-area-inset-top)) + 116px); }
