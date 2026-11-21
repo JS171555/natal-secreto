@@ -132,7 +132,9 @@ export function buildScene(L) {
     defs.push(`<clipPath id="leaf${r}" clipPathUnits="userSpaceOnUse"><path d="${d}"/></clipPath>`);
     const coverage = .4 + .4 * (1 - t);
     tiers += `<path class="snow-cap" d="${snowCap(cx, yb(r), w, P * 1.55, coverage, r, Wmax)}" fill="url(#branchSnow)" opacity=".58" clip-path="url(#leaf${r})"/>`;
-    if (r % 2 === 0 && w > 120) { const st = lightStrand(cx, yb(r), w, r); wires += `<path d="${st.wire}" fill="none" stroke="#E9C45A" stroke-opacity=".3" stroke-width="1.2"/>`; bulbs += st.bulbs; }
+    const st = lightStrand(cx, yb(r), w, r);
+    wires += `<path d="${st.wire}" fill="none" stroke="#E9C45A" stroke-opacity=".3" stroke-width="1.2"/>`;
+    bulbs += st.bulbs;
   }
   const apex = yb(total - 1) - P * 1.3, sy = apex - star * 0.3, tw = Wmax * 0.13, ty = yb(0) - 40;
   const trunk = `<path d="M${cx - tw / 2} ${ty}H${cx + tw / 2}L${cx + tw * 0.65} ${H - 68}H${cx - tw * 0.65}Z" fill="url(#trunk)"/>`;
