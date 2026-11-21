@@ -16,6 +16,15 @@ function tier(cx, yb, w, h) {
   for (let i = n; i > 0; i--) { const x1 = L + (i - 1) * sw, x0 = L + i * sw; p += `Q${(x0 + x1) / 2} ${yb + d * 2} ${x1} ${yb}`; }
   return p + `Q${cx - w * 0.2} ${yb - h * 0.45} ${cx} ${yb - h}Z`;
 }
+function snowCap(cx, yb, w, h) {
+  const edge = yb - h * 0.5, { n, sw, d, L, Rr } = botGeo(cx, edge, w);
+  let p = `M${L} ${yb - h}H${Rr}V${edge}`;
+  for (let i = n; i > 0; i--) {
+    const x1 = L + (i - 1) * sw, x0 = L + i * sw;
+    p += `Q${(x0 + x1) / 2} ${edge + d * 2} ${x1} ${edge}`;
+  }
+  return p + 'Z';
+}
 const pine = (cx, y, w, h) => tier(cx, y, w, h * 0.5) + tier(cx, y - h * 0.28, w * 0.78, h * 0.5) + tier(cx, y - h * 0.52, w * 0.55, h * 0.48);
 function starPath(cx, cy, R) {
   const pts = []; for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + (i * Math.PI) / 5, r = i % 2 ? R * 0.52 : R; pts.push(`${(cx + Math.cos(a) * r).toFixed(1)},${(cy + Math.sin(a) * r).toFixed(1)}`); }
@@ -104,7 +113,7 @@ export function buildScene(L) {
     + `<rect x="24" y="-8" width="5" height="10" rx="1" fill="#152f20"/>`
     + `<circle class="smoke s1" cx="2.5" cy="-27" r="2" fill="#dfe8f7"/><circle class="smoke s2" cx="2.5" cy="-27" r="2.6" fill="#dfe8f7"/><circle class="smoke s3" cx="2.5" cy="-27" r="3.2" fill="#dfe8f7"/></g>`;
 
-  // Árvore principal: neve acumulada no interior de cada galho, fio de luzes e lâmpadas.
+  // Árvore principal: cobertura de neve na metade superior de cada camada, recortada pelo formato do galho.
   const total = R + crown, crownW = [0.72, 0.48, 0.26];
   let tiers = '', wires = '', bulbs = '';
   for (let r = 0; r < total; r++) {
@@ -112,18 +121,8 @@ export function buildScene(L) {
     const c = mix('#082a1a', '#2f7a4a', t * 0.9), d = tier(cx, yb(r), w, P * 1.55);
     defs.push(`<linearGradient id="t${r}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${mix(c, '#9ecb6a', 0.18)}"/><stop offset="1" stop-color="${mix(c, '#031A14', 0.35)}"/></linearGradient>`);
     tiers += `<path d="${d}" fill="url(#t${r})" stroke="${mix(c, '#7fd39a', 0.4)}" stroke-opacity=".45" stroke-width="1.5"/><path d="${d}" fill="url(#gr)"/>`;
-    const hh = P * 1.55, base = yb(r), f = (n) => n.toFixed(1);
-    const patches = Array.from({ length: w > 500 ? 4 : w > 170 ? 3 : 2 }, () => {
-      const half = w * (.035 + rnd() * .035), x = cx + (rnd() - .5) * w * .32;
-      const y = base - hh * (.16 + rnd() * .2), thick = Math.max(1.4, Math.min(4.5, w * .007));
-      const path = `M${f(x-half)} ${f(y)}Q${f(x-half*.78)} ${f(y-thick*.5)} ${f(x-half*.52)} ${f(y-thick*.58)}Q${f(x-half*.2)} ${f(y-thick*1.18)} ${f(x)} ${f(y-thick*.62)}Q${f(x+half*.34)} ${f(y-thick*.34)} ${f(x+half*.56)} ${f(y-thick*.58)}Q${f(x+half*.84)} ${f(y-thick*.34)} ${f(x+half)} ${f(y)}Q${f(x+half*.52)} ${f(y+thick*.22)} ${f(x)} ${f(y+thick*.14)}Q${f(x-half*.54)} ${f(y+thick*.2)} ${f(x-half)} ${f(y)}Z`;
-      return `<path d="${path}" fill="url(#branchSnow)" opacity="${(.62 + rnd() * .25).toFixed(2)}"/>`;
-    }).join('');
-    const dust = Array.from({ length: Math.max(2, Math.round(w / 150)) }, () => {
-      const x = cx + (rnd() - .5) * w * .38, y = base - hh * (.1 + rnd() * .2), rad = .55 + rnd() * Math.min(1.25, w * .003);
-      return `<circle cx="${f(x)}" cy="${f(y)}" r="${f(rad)}" opacity="${(.42 + rnd() * .34).toFixed(2)}"/>`;
-    }).join('');
-    tiers += `<g class="snow-patches">${patches}<g fill="#f7fbff">${dust}</g></g>`;
+    defs.push(`<clipPath id="leaf${r}" clipPathUnits="userSpaceOnUse"><path d="${d}"/></clipPath>`);
+    tiers += `<path class="snow-cap" d="${snowCap(cx, yb(r), w, P * 1.55)}" fill="url(#branchSnow)" opacity=".94" clip-path="url(#leaf${r})"/>`;
     if (r % 2 === 0 && w > 120) { const st = lightStrand(cx, yb(r), w, r); wires += `<path d="${st.wire}" fill="none" stroke="#E9C45A" stroke-opacity=".3" stroke-width="1.2"/>`; bulbs += st.bulbs; }
   }
   const apex = yb(total - 1) - P * 1.3, sy = apex - star * 0.3, tw = Wmax * 0.13, ty = yb(0) - 40;
